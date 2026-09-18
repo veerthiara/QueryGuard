@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "queryguard"
+version = "0.1.0"
+description = "Reusable schema catalogs and SQLGlot structural validation for LLM-assisted SQL analytics"
+readme = "README.md"
+requires-python = ">=3.11,<4.0"
+dependencies = [
+    "pydantic>=2.0,<3.0",
+    "sqlglot>=2.5,<3.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=9.0,<10.0"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
