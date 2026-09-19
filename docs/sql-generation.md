@@ -51,5 +51,7 @@ The response cannot be a list, Markdown code fence, prose-wrapped JSON, multiple
 Each `generate()` call makes exactly one provider call. There are no retries, repair calls, reflection loops, automatic structural validation, policy checks, or SQL execution. Applications can observe and compose the stages separately:
 
 ```text
-generate -> structural validation -> policy validation (future) -> execution (future)
+generate -> structural validation -> policy validation -> approved SQL
+
+Database execution is outside QueryGuard core; applications that need the SQLAlchemy runtime can compose the separate `queryguard-sqlalchemy` companion package after policy validation.
 ```

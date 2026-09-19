@@ -3,7 +3,7 @@
 `SqlPolicyValidationService` is the policy stage after structural validation:
 
 ```text
-generate -> structural validation -> policy validation -> execution adapter (future)
+generate -> structural validation -> policy validation -> approved SQL
 ```
 
 Structural validation determines whether SQL has an allowed shape and uses approved schema objects. Policy validation applies user-scope and result-bound rules to that parsed SQL. It does not execute SQL and is not, by itself, a complete database security boundary.
@@ -37,4 +37,4 @@ Both `UNION` and `UNION ALL` validate each branch's physical reads independently
 
 Policy errors are deterministic: parse/dialect errors return first; then scope errors occur before result-bound errors; identical errors are deduplicated while preserving first occurrence. Stable codes include `USER_SCOPE_REQUIRED`, `USER_SCOPE_PARAMETER_REQUIRED`, `USER_SCOPE_LITERAL_NOT_ALLOWED`, `USER_SCOPE_AMBIGUOUS`, `RESULT_LIMIT_REQUIRED`, `RESULT_LIMIT_TOO_HIGH`, and `INVALID_LIMIT`.
 
-The engine deliberately does not perform full boolean theorem proving, infer scope through joins, repair invalid SQL, validate structural schema access automatically, bind parameters, or execute SQL. Use database permissions and a future read-only execution adapter as additional safeguards.
+The engine deliberately does not perform full boolean theorem proving, infer scope through joins, repair invalid SQL, validate structural schema access automatically, bind parameters, or execute SQL. Use database permissions and the separate `queryguard-sqlalchemy` companion package as additional safeguards where SQLAlchemy execution is needed.

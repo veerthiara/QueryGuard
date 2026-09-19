@@ -9,23 +9,23 @@ application YAML/catalog
     ↓
 QueryGuard schema catalog
     ↓
-SQL generation (future optional integration)
+SQL generation
     ↓
 AST structural validation
     ↓
-policy validation (future optional integration)
+policy validation
     ↓
-read-only execution adapter (future optional integration)
+approved SQL
+    ↓
+optional companion execution package
 ```
 
-## Rev 01 core
+## Core boundary
 
-The current core contains contracts, catalog providers, renderer, settings, and structural validation. Applications define their own `SqlSchemaCatalog` or catalog provider; QueryGuard never imports application models, database sessions, web frameworks, or orchestration code.
+The current core contains catalog contracts and providers, YAML loading, renderer, settings, generation, structural validation, and policy validation. Applications define their own `SqlSchemaCatalog` or catalog provider; QueryGuard never imports application models, database sessions, web frameworks, orchestration code, or database adapters.
 
 The structural validator uses SQLGlot and an approved catalog to reject non-read-only statement shapes, unsupported tables and columns, wildcards (except `COUNT(*)`), system schemas, and dangerous functions. It produces canonical physical-table and physical-column lineage metadata for supported CTEs, derived tables, nested scopes, and UNION queries.
 
-## Future optional layers
+## Companion layers
 
-Generation adapters can create SQL candidates from application questions. Policy validation can require user scope and result bounds. Read-only execution adapters can bind parameters and apply database-level protections. These layers are intentionally separate because AST validation alone is not a database security boundary.
-
-Application schemas, account identity rules, database credentials, execution ownership, and product-specific prompt behavior stay outside QueryGuard. This lets the same core serve multiple applications without coupling their domains.
+QueryGuard-SQLAlchemy is a separate companion package for optional synchronous SQLAlchemy execution of SQL that has already passed QueryGuard validation. Database credentials, execution ownership, read-only grants, and connection configuration remain outside QueryGuard core. This keeps the reusable validation boundary independent from runtime database concerns.
