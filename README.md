@@ -2,19 +2,20 @@
 
 QueryGuard is a reusable Python package for safe LLM-assisted SQL analytics. It uses approved schema catalogs, SQLGlot AST parsing, structural validation, and a deliberately layered design that can later add policy validation and safe execution adapters.
 
-## Rev 01 scope
+## Rev 02 scope
 
-Version 0.1.0 includes only:
+Version 0.2.0 includes:
 
 - schema contracts
 - catalog providers
 - deterministic schema rendering
 - reusable settings
 - SQLGlot-based structural validation
+- a safe, strict YAML catalog loader
 
 Structural validation permits approved read-only query shapes and checks catalog tables, columns, system schemas, prohibited functions, wildcards, CTEs, derived tables, nested scopes, UNION, and parser-derived physical lineage.
 
-Future revisions will add a YAML catalog loader, SQL generation, scope/result policy validation, and execution adapters. Those components are not included yet.
+Future revisions will add SQL generation, scope/result policy validation, and execution adapters. Those components are not included yet.
 
 ## Install and test
 
@@ -65,4 +66,20 @@ result = validator.validate("SELECT id FROM orders")
 assert result.valid
 ```
 
-Application-specific catalog definitions belong in each application. The YAML file in `examples/` is illustrative only; Rev 01 does not provide a YAML loader.
+## Using an application-owned YAML catalog
+
+Keep the catalog in the consuming application, then load it into QueryGuard:
+
+```python
+from queryguard import (
+    StaticSqlCatalogProvider,
+    SqlValidationService,
+    load_catalog_from_yaml,
+)
+
+catalog = load_catalog_from_yaml("catalog.yaml")
+provider = StaticSqlCatalogProvider(catalog)
+validator = SqlValidationService(provider)
+```
+
+The loader accepts `str` and `pathlib.Path` paths and uses `yaml.safe_load`. YAML keys are strict: unknown keys are rejected instead of ignored. See [the YAML catalog guide](docs/yaml-catalog.md) for the canonical format.

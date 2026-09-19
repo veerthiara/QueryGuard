@@ -1,9 +1,12 @@
-catalog_name: commerce
-catalog_version: "1.0"
-dialect: postgresql
+catalog:
+  name: commerce
+  version: "1.0"
+  dialect: postgresql
+
 global_rules:
   - Only SELECT statements are permitted.
   - User-scoped tables must be filtered by the application user parameter.
+
 tables:
   - name: customers
     description: Customer accounts
@@ -12,43 +15,45 @@ tables:
     columns:
       - name: id
         description: Customer identifier
-        data_type: uuid
-        is_primary_key: true
+        type: uuid
+        primary_key: true
         nullable: false
       - name: account_id
         description: Owning account identifier
-        data_type: uuid
+        type: uuid
         nullable: false
       - name: name
         description: Customer display name
-        data_type: varchar(255)
+        type: varchar(255)
         nullable: false
   - name: orders
     description: Customer orders
     aliases: [sales_orders]
     user_scoped: true
+    scope_strategy: direct
+    scope_description: Restricted to the application account.
     business_rules:
       - Order totals are stored in cents.
     columns:
       - name: id
         description: Order identifier
-        data_type: uuid
-        is_primary_key: true
+        type: uuid
+        primary_key: true
         nullable: false
       - name: account_id
         description: Owning account identifier
-        data_type: uuid
-        is_user_scope: true
+        type: uuid
+        user_scope: true
         nullable: false
       - name: customer_id
         description: Customer reference
-        data_type: uuid
-        is_foreign_key: true
+        type: uuid
+        foreign_key: true
         foreign_key_target: customers.id
         nullable: false
       - name: total_cents
         description: Order total in cents
-        data_type: integer
+        type: integer
         nullable: false
   - name: order_items
     description: Order line items
@@ -56,23 +61,23 @@ tables:
     columns:
       - name: id
         description: Line item identifier
-        data_type: uuid
-        is_primary_key: true
+        type: uuid
+        primary_key: true
         nullable: false
       - name: account_id
         description: Owning account identifier
-        data_type: uuid
-        is_user_scope: true
+        type: uuid
+        user_scope: true
         nullable: false
       - name: order_id
         description: Order reference
-        data_type: uuid
-        is_foreign_key: true
+        type: uuid
+        foreign_key: true
         foreign_key_target: orders.id
         nullable: false
       - name: product_name
         description: Purchased product name
-        data_type: varchar(255)
+        type: varchar(255)
         nullable: false
 relationships:
   - left_table: orders
