@@ -2,9 +2,9 @@
 
 QueryGuard is a reusable Python package for safe LLM-assisted SQL analytics. It uses approved schema catalogs, SQLGlot AST parsing, structural validation, and a deliberately layered design that can later add policy validation and safe execution adapters.
 
-## Rev 02 scope
+## Rev 03 scope
 
-Version 0.2.0 includes:
+Version 0.3.0 includes:
 
 - schema contracts
 - catalog providers
@@ -12,10 +12,13 @@ Version 0.2.0 includes:
 - reusable settings
 - SQLGlot-based structural validation
 - a safe, strict YAML catalog loader
+- provider-neutral, single-pass SQL generation
 
 Structural validation permits approved read-only query shapes and checks catalog tables, columns, system schemas, prohibited functions, wildcards, CTEs, derived tables, nested scopes, UNION, and parser-derived physical lineage.
 
-Future revisions will add SQL generation, scope/result policy validation, and execution adapters. Those components are not included yet.
+Generation uses an application-supplied provider interface and returns the existing `GeneratedSql` contract. It does not validate or execute generated SQL.
+
+Future revisions will add scope/result policy validation and execution adapters. Those components are not included yet.
 
 ## Install and test
 
@@ -83,3 +86,32 @@ validator = SqlValidationService(provider)
 ```
 
 The loader accepts `str` and `pathlib.Path` paths and uses `yaml.safe_load`. YAML keys are strict: unknown keys are rejected instead of ignored. See [the YAML catalog guide](docs/yaml-catalog.md) for the canonical format.
+
+## Provider-neutral SQL generation
+
+The consuming application implements the provider adapter; QueryGuard does not depend on any provider SDK.
+
+```python
+from queryguard import (
+    SqlGenerationService,
+    StaticSqlCatalogProvider,
+    load_catalog_from_yaml,
+)
+
+catalog = load_catalog_from_yaml("catalog.yaml")
+catalog_provider = StaticSqlCatalogProvider(catalog)
+provider = MyApplicationProvider(...)
+
+generator = SqlGenerationService(
+    catalog_provider=catalog_provider,
+    provider=provider,
+)
+
+generated = await generator.generate(
+    "How many orders were placed this month?"
+)
+
+print(generated.sql)
+```
+
+Providers return exactly one JSON object matching `GeneratedSql`; Markdown and surrounding prose are rejected. See [the SQL generation guide](docs/sql-generation.md) for the provider protocol and stage boundaries.

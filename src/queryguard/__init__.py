@@ -14,12 +14,19 @@ from queryguard.contracts import (
     SqlValidationError,
     SqlValidationResult,
 )
+from queryguard.generation import (
+    SqlGenerationError,
+    SqlGenerationProvider,
+    SqlGenerationResponseError,
+    SqlGenerationService,
+)
+from queryguard.prompts import build_sql_generation_messages
 from queryguard.renderer import SqlSchemaContextRenderer, render_catalog_for_prompt
 from queryguard.settings import SqlAnalyticsSettings
 from queryguard.validation import SqlValidationService
 from queryguard.yaml_loader import CatalogYamlError, load_catalog_from_yaml, parse_catalog_yaml
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     "GeneratedSql",
@@ -28,6 +35,10 @@ __all__ = [
     "SqlAnalyticsSettings",
     "SqlCatalogProvider",
     "SqlColumnDefinition",
+    "SqlGenerationError",
+    "SqlGenerationProvider",
+    "SqlGenerationResponseError",
+    "SqlGenerationService",
     "SqlRelationshipDefinition",
     "SqlSchemaCatalog",
     "SqlSchemaContextRenderer",
@@ -39,4 +50,5 @@ __all__ = [
     "render_catalog_for_prompt",
     "load_catalog_from_yaml",
     "parse_catalog_yaml",
+    "build_sql_generation_messages",
 ]
