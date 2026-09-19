@@ -1,6 +1,6 @@
 """Generic schema and structural-validation contracts for QueryGuard."""
 
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -237,4 +237,43 @@ class SqlPolicyValidationResult(BaseModel):
             raise ValueError("valid=True requires no errors")
         if not self.valid and not self.errors:
             raise ValueError("valid=False requires at least one error")
+        return self
+
+
+class QueryPreparationResult(BaseModel):
+    """Outcome of QueryGuard generation plus structural and policy validation."""
+
+    approved: bool
+    generated: GeneratedSql | None = None
+    structural: SqlValidationResult | None = None
+    policy: SqlPolicyValidationResult | None = None
+    stage: Literal["generation", "structural_validation", "policy_validation", "approved"]
+    errors: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    def _validate_state(self) -> "QueryPreparationResult":
+        if self.approved:
+            if self.stage != "approved" or self.structural is None or not self.structural.valid:
+                raise ValueError("approved results require an approved stage and valid structural result")
+            if self.policy is None or not self.policy.valid:
+                raise ValueError("approved results require a valid policy result")
+            if self.errors:
+                raise ValueError("approved results must not contain errors")
+            return self
+
+        if not self.errors:
+            raise ValueError("rejected results require at least one error")
+        if self.stage == "generation":
+            if self.generated is not None or self.structural is not None or self.policy is not None:
+                raise ValueError("generation failures must not contain downstream results")
+        elif self.stage == "structural_validation":
+            if self.structural is None or self.structural.valid or self.policy is not None:
+                raise ValueError("structural failures require an invalid structural result and no policy result")
+        elif self.stage == "policy_validation":
+            if self.structural is None or not self.structural.valid:
+                raise ValueError("policy failures require a valid structural result")
+            if self.policy is None or self.policy.valid:
+                raise ValueError("policy failures require an invalid policy result")
+        else:
+            raise ValueError("rejected results cannot use the approved stage")
         return self

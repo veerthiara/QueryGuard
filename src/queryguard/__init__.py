@@ -15,7 +15,9 @@ from queryguard.contracts import (
     SqlTableDefinition,
     SqlValidationError,
     SqlValidationResult,
+    QueryPreparationResult,
 )
+from queryguard.facade import QueryGuard
 from queryguard.policy import SqlPolicyValidationService
 from queryguard.generation import (
     SqlGenerationError,
@@ -29,10 +31,12 @@ from queryguard.settings import SqlAnalyticsSettings
 from queryguard.validation import SqlValidationService
 from queryguard.yaml_loader import CatalogYamlError, load_catalog_from_yaml, parse_catalog_yaml
 
-__version__ = "0.6.0"
+__version__ = "0.7.0"
 
 __all__ = [
     "GeneratedSql",
+    "QueryGuard",
+    "QueryPreparationResult",
     "CatalogYamlError",
     "LazySqlCatalogProvider",
     "SqlAnalyticsSettings",

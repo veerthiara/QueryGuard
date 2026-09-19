@@ -62,6 +62,20 @@ def _normalize_identifier(name: str | exp.Expression) -> str:
     return name.lower()
 
 
+def _is_bind_parameter_column(column: exp.Column) -> bool:
+    """Return True for executable symbolic parameters, not quoted identifiers."""
+
+    identifier = column.this
+    if not isinstance(identifier, exp.Identifier) or identifier.args.get("quoted"):
+        return False
+    name = column.name
+    return (
+        (name.startswith("@") and len(name) > 1)
+        or name == "?"
+        or (name.startswith("$") and name[1:].isdigit())
+    )
+
+
 def _get_schema_name(node: exp.Expression) -> str | None:
     """Extract schema name from a table expression."""
     if isinstance(node, exp.Table):
@@ -662,6 +676,8 @@ class SqlValidationService:
                 external_col_names.add(_normalize_identifier(ext_col.name))
 
             for col in scope.columns:
+                if _is_bind_parameter_column(col):
+                    continue
                 col_name = _normalize_identifier(col.name)
                 table_qualifier = _normalize_identifier(col.table) if col.table else None
 

@@ -2,9 +2,9 @@
 
 QueryGuard is a reusable Python package for safe LLM-assisted SQL analytics. It uses approved schema catalogs, SQLGlot AST parsing, structural validation, and a deliberately layered design that can later add policy validation and safe execution adapters.
 
-## Rev 06 scope
+## Rev 07 scope
 
-Version 0.6.0 includes:
+Version 0.7.0 includes:
 
 - schema contracts
 - catalog providers
@@ -14,12 +14,37 @@ Version 0.6.0 includes:
 - a safe, strict YAML catalog loader
 - provider-neutral, single-pass SQL generation
 - policy validation for user scope and result bounds
+- a unified preparation facade
 
 Structural validation permits approved read-only query shapes and checks catalog tables, columns, system schemas, prohibited functions, wildcards, CTEs, derived tables, nested scopes, UNION, and parser-derived physical lineage.
 
 Generation uses an application-supplied provider interface and returns the existing `GeneratedSql` contract. Policy validation enforces direct user scope and result bounds without executing SQL.
 
 QueryGuard ends with approved SQL after structural and policy validation. Database execution is intentionally outside the core package.
+
+## Unified preparation facade
+
+The simplest application-facing path is the `QueryGuard` facade. It generates SQL, structurally validates it, applies policy validation, and never executes SQL.
+
+```python
+from queryguard import QueryGuard
+
+guard = QueryGuard.from_yaml(
+    "catalog.yaml",
+    provider=my_provider,
+)
+
+result = await guard.prepare(
+    "How many orders were placed this month?"
+)
+
+if result.approved:
+    sql = result.generated.sql
+else:
+    print(result.errors)
+```
+
+For SQL supplied by another agent or tool, use `guard.validate_sql(sql)` to run structural and policy validation without an LLM call. If SQL is approved, an agent can choose a separate execution tool or the `queryguard-sqlalchemy` companion package.
 
 ## Install and test
 
