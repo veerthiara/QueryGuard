@@ -27,7 +27,7 @@ applications that need a read-only SQLAlchemy execution boundary.
 
 ## Requirements and installation
 
-QueryGuard 0.9.0 currently supports Python 3.11.
+QueryGuard 0.10.0 currently supports Python 3.11.
 
 Install the runtime package:
 
@@ -98,12 +98,17 @@ make coverage
 make check            # lint, format, typecheck, and tests
 make build
 make verify-install   # clean-install built wheel smoke test
+make eval MODEL=<local-ollama-model>          # opt-in live evaluation
+make eval-safety MODEL=<local-ollama-model>   # opt-in safety subset
 ```
 
 Equivalent commands use `python -m pytest`, `python -m ruff`, `python -m mypy`,
 and `python -m build`. The [testing guide](docs/testing.md) explains why unit
-tests, deterministic E2E acceptance tests, and future live-provider quality
-evaluations are intentionally separate.
+tests, deterministic E2E acceptance tests, and live-provider evaluations are
+intentionally separate.
+
+Live Ollama evaluations are optional measurement tooling, never part of
+`pytest`, `make check`, or deterministic CI. See the [evaluation guide](docs/evaluation.md).
 
 ## Documentation
 
@@ -113,6 +118,7 @@ evaluations are intentionally separate.
 - [SQL generation protocol](docs/sql-generation.md)
 - [Policy validation](docs/policy-validation.md)
 - [Testing](docs/testing.md)
+- [Live evaluation](docs/evaluation.md)
 - [Release preparation](docs/releasing.md)
 - [Contributing](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)

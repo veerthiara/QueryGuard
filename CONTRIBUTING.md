@@ -28,9 +28,9 @@ python -m pytest tests/e2e
 python -m pytest
 
 # Quality gates
-python -m ruff check src tests
-python -m ruff format --check src tests
-python -m mypy src/queryguard
+python -m ruff check src tests evals
+python -m ruff format --check src tests evals
+python -m mypy src/queryguard evals/queryguard_evals
 python -m pytest --cov=queryguard --cov-report=term-missing
 
 # Package and wheel verification
@@ -51,13 +51,23 @@ of the package typing contract.
 - `tests/queryguard/` contains focused unit and module-level regression tests.
 - `tests/e2e/` contains deterministic full-pipeline acceptance tests using the
   real example YAML and test-only providers.
-- Future live-provider quality evaluations belong outside the normal test
-  suite. They answer a different question and must not make local or CI tests
-  depend on credentials, model availability, or network services.
+- Optional live-provider quality evaluations belong in `evals/`, outside the
+  normal test suite. They answer a different question and must not make local
+  or CI tests depend on model availability or network services.
 
 A unit test asks, “Does this function or module behave correctly?” An E2E
 acceptance test asks, “Do QueryGuard modules work together correctly?” A live
 evaluation asks, “Does a real LLM generate useful SQL?”
+
+## Add an evaluation regression case
+
+Live evaluations are opt-in tooling under `evals/`, never normal pytest or CI.
+Add a YAML case to `evals/cases/commerce.yaml` when a real model exposes a
+repeatable semantic gap worth tracking. Use property expectations rather than
+exact SQL, classify unsafe or unsupported requests as `kind: rejection`, and
+add deterministic harness tests if scoring behavior changes. Run it locally
+with `make eval MODEL=<local-ollama-model>` or the rejection subset with
+`make eval-safety MODEL=<local-ollama-model>`.
 
 ## Make changes safely
 

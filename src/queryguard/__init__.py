@@ -31,7 +31,7 @@ from queryguard.settings import SqlAnalyticsSettings
 from queryguard.validation import SqlValidationService
 from queryguard.yaml_loader import CatalogYamlError, load_catalog_from_yaml, parse_catalog_yaml
 
-__version__ = "0.9.0"
+__version__ = "0.10.0"
 
 __all__ = [
     "GeneratedSql",

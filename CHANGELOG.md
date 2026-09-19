@@ -3,6 +3,11 @@
 This changelog records package milestones. Release dates are intentionally not
 listed because they are not tracked in this repository.
 
+## 0.10.0
+
+- Added an opt-in local Ollama SQL-generation evaluation harness, a reusable
+  commerce dataset, semantic scoring, safety evaluation, and report generation.
+
 ## 0.9.0
 
 - Hardened packaging metadata and development extras.

@@ -28,7 +28,7 @@ The message tuple has this exact shape:
 2. Any caller-supplied `user`, `assistant`, or `system` history messages, copied without mutation.
 3. One final `user` message containing the question.
 
-The system message requires read-only SQL, approved schema only, no invented tables or columns, explicit columns instead of `SELECT *`, no SQL execution, and JSON-only output. For a user-scoped query it instructs the provider to use the configured symbolic parameter, such as `@user_id`. No actual account or user value is accepted by the generation API or placed into the prompt.
+The system message requires read-only SQL, approved schema only, no invented tables or columns, explicit columns instead of `SELECT *`, no SQL execution, and JSON-only output. For a user-scoped query it instructs the provider to use the configured symbolic parameter, such as `@user_id`, and to scope every physical user-scoped read independently, including joins and nested queries. It also requires a final positive result limit of no more than 500 for ordinary row-returning queries and UNION results. No actual account or user value is accepted by the generation API or placed into the prompt.
 
 ## Response contract
 

@@ -30,6 +30,8 @@ def test_prompt_includes_required_safety_and_output_instructions():
     assert "json object" in content
     assert "do not include markdown" in content
     assert "never use select *" in content
+    assert "every user-scoped physical table read" in content
+    assert "final positive limit no greater than 500" in content
 
 
 def test_prompt_includes_schema_question_and_symbolic_scope_parameter():
