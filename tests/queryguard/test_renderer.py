@@ -1,13 +1,12 @@
 """Tests for generic prompt renderer."""
 
-import pytest
-from queryguard.renderer import SqlSchemaContextRenderer, render_catalog_for_prompt
 from queryguard.contracts import (
-    SqlSchemaCatalog,
-    SqlTableDefinition,
     SqlColumnDefinition,
     SqlRelationshipDefinition,
+    SqlSchemaCatalog,
+    SqlTableDefinition,
 )
+from queryguard.renderer import SqlSchemaContextRenderer, render_catalog_for_prompt
 
 
 def _fake_catalog() -> SqlSchemaCatalog:
@@ -21,9 +20,24 @@ def _fake_catalog() -> SqlSchemaCatalog:
                 description="Customer accounts",
                 user_scoped=False,
                 columns=(
-                    SqlColumnDefinition(name="id", description="Unique customer ID", data_type="uuid", is_primary_key=True),
-                    SqlColumnDefinition(name="email", description="Login email", data_type="varchar(255)", nullable=False),
-                    SqlColumnDefinition(name="created_at", description="Account creation", data_type="timestamp with time zone", nullable=False),
+                    SqlColumnDefinition(
+                        name="id",
+                        description="Unique customer ID",
+                        data_type="uuid",
+                        is_primary_key=True,
+                    ),
+                    SqlColumnDefinition(
+                        name="email",
+                        description="Login email",
+                        data_type="varchar(255)",
+                        nullable=False,
+                    ),
+                    SqlColumnDefinition(
+                        name="created_at",
+                        description="Account creation",
+                        data_type="timestamp with time zone",
+                        nullable=False,
+                    ),
                 ),
                 business_rules=("Email must be unique",),
             ),
@@ -32,11 +46,32 @@ def _fake_catalog() -> SqlSchemaCatalog:
                 description="Customer orders",
                 user_scoped=True,
                 columns=(
-                    SqlColumnDefinition(name="id", description="Order ID", data_type="uuid", is_primary_key=True),
-                    SqlColumnDefinition(name="customer_id", description="Buyer", data_type="uuid", is_foreign_key=True, foreign_key_target="customers.id", is_user_scope=True),
-                    SqlColumnDefinition(name="total_cents", description="Order total in cents", data_type="integer", nullable=False),
-                    SqlColumnDefinition(name="placed_at", description="Order timestamp", data_type="timestamp with time zone", nullable=False),
-                    SqlColumnDefinition(name="secret_note", description="Internal", data_type="text", sensitive=True),
+                    SqlColumnDefinition(
+                        name="id", description="Order ID", data_type="uuid", is_primary_key=True
+                    ),
+                    SqlColumnDefinition(
+                        name="customer_id",
+                        description="Buyer",
+                        data_type="uuid",
+                        is_foreign_key=True,
+                        foreign_key_target="customers.id",
+                        is_user_scope=True,
+                    ),
+                    SqlColumnDefinition(
+                        name="total_cents",
+                        description="Order total in cents",
+                        data_type="integer",
+                        nullable=False,
+                    ),
+                    SqlColumnDefinition(
+                        name="placed_at",
+                        description="Order timestamp",
+                        data_type="timestamp with time zone",
+                        nullable=False,
+                    ),
+                    SqlColumnDefinition(
+                        name="secret_note", description="Internal", data_type="text", sensitive=True
+                    ),
                 ),
                 business_rules=("Only completed orders have total_cents > 0",),
             ),
@@ -46,8 +81,12 @@ def _fake_catalog() -> SqlSchemaCatalog:
                 allowed_for_select=False,
                 user_scoped=False,
                 columns=(
-                    SqlColumnDefinition(name="id", description="Log ID", data_type="uuid", is_primary_key=True),
-                    SqlColumnDefinition(name="action", description="Action taken", data_type="varchar(50)"),
+                    SqlColumnDefinition(
+                        name="id", description="Log ID", data_type="uuid", is_primary_key=True
+                    ),
+                    SqlColumnDefinition(
+                        name="action", description="Action taken", data_type="varchar(50)"
+                    ),
                 ),
             ),
         ),
@@ -141,9 +180,36 @@ class TestSqlSchemaContextRenderer:
             catalog_name="test",
             catalog_version="1.0",
             tables=(
-                SqlTableDefinition(name="zebra", description="Z", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="x", data_type="uuid", is_primary_key=True),)),
-                SqlTableDefinition(name="apple", description="A", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="x", data_type="uuid", is_primary_key=True),)),
-                SqlTableDefinition(name="banana", description="B", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="x", data_type="uuid", is_primary_key=True),)),
+                SqlTableDefinition(
+                    name="zebra",
+                    description="Z",
+                    user_scoped=False,
+                    columns=(
+                        SqlColumnDefinition(
+                            name="id", description="x", data_type="uuid", is_primary_key=True
+                        ),
+                    ),
+                ),
+                SqlTableDefinition(
+                    name="apple",
+                    description="A",
+                    user_scoped=False,
+                    columns=(
+                        SqlColumnDefinition(
+                            name="id", description="x", data_type="uuid", is_primary_key=True
+                        ),
+                    ),
+                ),
+                SqlTableDefinition(
+                    name="banana",
+                    description="B",
+                    user_scoped=False,
+                    columns=(
+                        SqlColumnDefinition(
+                            name="id", description="x", data_type="uuid", is_primary_key=True
+                        ),
+                    ),
+                ),
             ),
         )
         renderer = SqlSchemaContextRenderer()
@@ -180,13 +246,66 @@ class TestSqlSchemaContextRenderer:
             catalog_name="test",
             catalog_version="1.0",
             tables=(
-                SqlTableDefinition(name="a", description="A", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="x", data_type="uuid", is_primary_key=True),)),
-                SqlTableDefinition(name="b", description="B", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="x", data_type="uuid", is_primary_key=True), SqlColumnDefinition(name="a_id", description="FK", data_type="uuid", is_foreign_key=True, foreign_key_target="a.id"),)),
-                SqlTableDefinition(name="c", description="C", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="x", data_type="uuid", is_primary_key=True), SqlColumnDefinition(name="b_id", description="FK", data_type="uuid", is_foreign_key=True, foreign_key_target="b.id"),)),
+                SqlTableDefinition(
+                    name="a",
+                    description="A",
+                    user_scoped=False,
+                    columns=(
+                        SqlColumnDefinition(
+                            name="id", description="x", data_type="uuid", is_primary_key=True
+                        ),
+                    ),
+                ),
+                SqlTableDefinition(
+                    name="b",
+                    description="B",
+                    user_scoped=False,
+                    columns=(
+                        SqlColumnDefinition(
+                            name="id", description="x", data_type="uuid", is_primary_key=True
+                        ),
+                        SqlColumnDefinition(
+                            name="a_id",
+                            description="FK",
+                            data_type="uuid",
+                            is_foreign_key=True,
+                            foreign_key_target="a.id",
+                        ),
+                    ),
+                ),
+                SqlTableDefinition(
+                    name="c",
+                    description="C",
+                    user_scoped=False,
+                    columns=(
+                        SqlColumnDefinition(
+                            name="id", description="x", data_type="uuid", is_primary_key=True
+                        ),
+                        SqlColumnDefinition(
+                            name="b_id",
+                            description="FK",
+                            data_type="uuid",
+                            is_foreign_key=True,
+                            foreign_key_target="b.id",
+                        ),
+                    ),
+                ),
             ),
             relationships=(
-                SqlRelationshipDefinition(left_table="c", left_column="b_id", right_table="b", right_column="id", relationship_type="many_to_one"),
-                SqlRelationshipDefinition(left_table="b", left_column="a_id", right_table="a", right_column="id", relationship_type="many_to_one"),
+                SqlRelationshipDefinition(
+                    left_table="c",
+                    left_column="b_id",
+                    right_table="b",
+                    right_column="id",
+                    relationship_type="many_to_one",
+                ),
+                SqlRelationshipDefinition(
+                    left_table="b",
+                    left_column="a_id",
+                    right_table="a",
+                    right_column="id",
+                    relationship_type="many_to_one",
+                ),
             ),
         )
         renderer = SqlSchemaContextRenderer()
@@ -201,22 +320,47 @@ class TestSqlSchemaContextRenderer:
             catalog_name="test",
             catalog_version="1.0",
             tables=(
-                SqlTableDefinition(name="a", description="x", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="x", data_type="uuid", is_primary_key=True),)),
-                SqlTableDefinition(name="b", description="y", allowed_for_select=False, user_scoped=False, columns=(SqlColumnDefinition(name="id", description="x", data_type="uuid", is_primary_key=True),)),
+                SqlTableDefinition(
+                    name="a",
+                    description="x",
+                    user_scoped=False,
+                    columns=(
+                        SqlColumnDefinition(
+                            name="id", description="x", data_type="uuid", is_primary_key=True
+                        ),
+                    ),
+                ),
+                SqlTableDefinition(
+                    name="b",
+                    description="y",
+                    allowed_for_select=False,
+                    user_scoped=False,
+                    columns=(
+                        SqlColumnDefinition(
+                            name="id", description="x", data_type="uuid", is_primary_key=True
+                        ),
+                    ),
+                ),
             ),
             relationships=(
-                SqlRelationshipDefinition(left_table="a", left_column="id", right_table="b", right_column="id", relationship_type="one_to_one"),
+                SqlRelationshipDefinition(
+                    left_table="a",
+                    left_column="id",
+                    right_table="b",
+                    right_column="id",
+                    relationship_type="one_to_one",
+                ),
             ),
         )
         renderer = SqlSchemaContextRenderer()
         output = renderer.render(catalog)
         assert "a.id -> b.id" not in output
 
-    def test_no_habittracker_names_in_output(self):
-        """Generic renderer must not leak HabitTracker-specific names."""
+    def test_no_application_specific_names_in_output(self):
+        """Generic renderer must not leak application-specific names."""
         renderer = SqlSchemaContextRenderer()
         output = renderer.render(_fake_catalog())
-        # These are the fake domain names - should not contain HabitTracker names
+        # These names belong to another application domain and must not leak.
         assert "habits" not in output
         assert "habit_logs" not in output
         assert "bottle_events" not in output
@@ -240,7 +384,9 @@ class TestSqlSchemaContextRenderer:
                     user_scoped=False,
                     allowed_for_select=False,
                     columns=(
-                        SqlColumnDefinition(name="id", description="User ID", data_type="uuid", is_primary_key=True),
+                        SqlColumnDefinition(
+                            name="id", description="User ID", data_type="uuid", is_primary_key=True
+                        ),
                     ),
                 ),
                 SqlTableDefinition(
@@ -249,7 +395,9 @@ class TestSqlSchemaContextRenderer:
                     user_scoped=True,
                     allowed_for_select=True,
                     columns=(
-                        SqlColumnDefinition(name="id", description="Order ID", data_type="uuid", is_primary_key=True),
+                        SqlColumnDefinition(
+                            name="id", description="Order ID", data_type="uuid", is_primary_key=True
+                        ),
                         SqlColumnDefinition(
                             name="user_id",
                             description="Owner user",
@@ -258,7 +406,9 @@ class TestSqlSchemaContextRenderer:
                             foreign_key_target="hidden_users.id",
                             is_user_scope=True,
                         ),
-                        SqlColumnDefinition(name="total", description="Total", data_type="integer", nullable=False),
+                        SqlColumnDefinition(
+                            name="total", description="Total", data_type="integer", nullable=False
+                        ),
                     ),
                 ),
             ),

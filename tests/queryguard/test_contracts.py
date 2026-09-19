@@ -1,14 +1,13 @@
 """Tests for generic SQL analytics contracts."""
 
 import pytest
+
 from queryguard.contracts import (
+    GeneratedSql,
     SqlColumnDefinition,
-    SqlTableDefinition,
     SqlRelationshipDefinition,
     SqlSchemaCatalog,
-    GeneratedSql,
-    SqlValidationError,
-    SqlValidationResult,
+    SqlTableDefinition,
 )
 
 
@@ -37,7 +36,9 @@ class TestSqlColumnDefinition:
 
     def test_fk_requires_target(self):
         with pytest.raises(ValueError):
-            SqlColumnDefinition(name="user_id", description="x", data_type="uuid", is_foreign_key=True)
+            SqlColumnDefinition(
+                name="user_id", description="x", data_type="uuid", is_foreign_key=True
+            )
 
     def test_fk_with_target_ok(self):
         col = SqlColumnDefinition(
@@ -77,7 +78,9 @@ class TestSqlTableDefinition:
             description="App users",
             user_scoped=False,
             columns=(
-                SqlColumnDefinition(name="id", description="PK", data_type="uuid", is_primary_key=True),
+                SqlColumnDefinition(
+                    name="id", description="PK", data_type="uuid", is_primary_key=True
+                ),
             ),
         )
         assert table.name == "users"
@@ -109,7 +112,9 @@ class TestSqlTableDefinition:
                 description="x",
                 user_scoped=True,
                 columns=(
-                    SqlColumnDefinition(name="id", description="PK", data_type="uuid", is_primary_key=True),
+                    SqlColumnDefinition(
+                        name="id", description="PK", data_type="uuid", is_primary_key=True
+                    ),
                 ),
             )
 
@@ -119,8 +124,12 @@ class TestSqlTableDefinition:
             description="x",
             user_scoped=True,
             columns=(
-                SqlColumnDefinition(name="id", description="PK", data_type="uuid", is_primary_key=True),
-                SqlColumnDefinition(name="user_id", description="Owner", data_type="uuid", is_user_scope=True),
+                SqlColumnDefinition(
+                    name="id", description="PK", data_type="uuid", is_primary_key=True
+                ),
+                SqlColumnDefinition(
+                    name="user_id", description="Owner", data_type="uuid", is_user_scope=True
+                ),
             ),
         )
         assert table.user_scoped is True
@@ -131,8 +140,12 @@ class TestSqlTableDefinition:
             description="x",
             user_scoped=False,
             columns=(
-                SqlColumnDefinition(name="id", description="PK", data_type="uuid", is_primary_key=True),
-                SqlColumnDefinition(name="secret", description="Hidden", data_type="text", sensitive=True),
+                SqlColumnDefinition(
+                    name="id", description="PK", data_type="uuid", is_primary_key=True
+                ),
+                SqlColumnDefinition(
+                    name="secret", description="Hidden", data_type="text", sensitive=True
+                ),
             ),
         )
         selectable = table.selectable_columns()
@@ -145,8 +158,12 @@ class TestSqlTableDefinition:
             description="x",
             user_scoped=True,
             columns=(
-                SqlColumnDefinition(name="id", description="PK", data_type="uuid", is_primary_key=True),
-                SqlColumnDefinition(name="user_id", description="Owner", data_type="uuid", is_user_scope=True),
+                SqlColumnDefinition(
+                    name="id", description="PK", data_type="uuid", is_primary_key=True
+                ),
+                SqlColumnDefinition(
+                    name="user_id", description="Owner", data_type="uuid", is_user_scope=True
+                ),
             ),
         )
         scoped = table.user_scope_columns()
@@ -159,8 +176,12 @@ class TestSqlTableDefinition:
             description="x",
             user_scoped=False,
             columns=(
-                SqlColumnDefinition(name="id", description="PK", data_type="uuid", is_primary_key=True),
-                SqlColumnDefinition(name="other_id", description="Other PK", data_type="uuid", is_primary_key=True),
+                SqlColumnDefinition(
+                    name="id", description="PK", data_type="uuid", is_primary_key=True
+                ),
+                SqlColumnDefinition(
+                    name="other_id", description="Other PK", data_type="uuid", is_primary_key=True
+                ),
                 SqlColumnDefinition(name="col", description="Not PK", data_type="text"),
             ),
         )
@@ -209,7 +230,11 @@ class TestSqlSchemaCatalog:
                     name="users",
                     description="Users",
                     user_scoped=False,
-                    columns=(SqlColumnDefinition(name="id", description="PK", data_type="uuid", is_primary_key=True),),
+                    columns=(
+                        SqlColumnDefinition(
+                            name="id", description="PK", data_type="uuid", is_primary_key=True
+                        ),
+                    ),
                 ),
             ),
         )
@@ -225,8 +250,26 @@ class TestSqlSchemaCatalog:
                 catalog_name="test",
                 catalog_version="1.0",
                 tables=(
-                    SqlTableDefinition(name="t", description="a", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="x", data_type="uuid", is_primary_key=True),)),
-                    SqlTableDefinition(name="t", description="b", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="x", data_type="uuid", is_primary_key=True),)),
+                    SqlTableDefinition(
+                        name="t",
+                        description="a",
+                        user_scoped=False,
+                        columns=(
+                            SqlColumnDefinition(
+                                name="id", description="x", data_type="uuid", is_primary_key=True
+                            ),
+                        ),
+                    ),
+                    SqlTableDefinition(
+                        name="t",
+                        description="b",
+                        user_scoped=False,
+                        columns=(
+                            SqlColumnDefinition(
+                                name="id", description="x", data_type="uuid", is_primary_key=True
+                            ),
+                        ),
+                    ),
                 ),
             )
 
@@ -236,7 +279,16 @@ class TestSqlSchemaCatalog:
                 catalog_name="test",
                 catalog_version="1.0",
                 tables=(
-                    SqlTableDefinition(name="users", description="Users", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="PK", data_type="uuid", is_primary_key=True),)),
+                    SqlTableDefinition(
+                        name="users",
+                        description="Users",
+                        user_scoped=False,
+                        columns=(
+                            SqlColumnDefinition(
+                                name="id", description="PK", data_type="uuid", is_primary_key=True
+                            ),
+                        ),
+                    ),
                 ),
                 relationships=(
                     SqlRelationshipDefinition(
@@ -255,8 +307,26 @@ class TestSqlSchemaCatalog:
                 catalog_name="test",
                 catalog_version="1.0",
                 tables=(
-                    SqlTableDefinition(name="users", description="Users", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="PK", data_type="uuid", is_primary_key=True),)),
-                    SqlTableDefinition(name="orders", description="Orders", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="PK", data_type="uuid", is_primary_key=True),)),
+                    SqlTableDefinition(
+                        name="users",
+                        description="Users",
+                        user_scoped=False,
+                        columns=(
+                            SqlColumnDefinition(
+                                name="id", description="PK", data_type="uuid", is_primary_key=True
+                            ),
+                        ),
+                    ),
+                    SqlTableDefinition(
+                        name="orders",
+                        description="Orders",
+                        user_scoped=False,
+                        columns=(
+                            SqlColumnDefinition(
+                                name="id", description="PK", data_type="uuid", is_primary_key=True
+                            ),
+                        ),
+                    ),
                 ),
                 relationships=(
                     SqlRelationshipDefinition(
@@ -275,12 +345,43 @@ class TestSqlSchemaCatalog:
                 catalog_name="test",
                 catalog_version="1.0",
                 tables=(
-                    SqlTableDefinition(name="users", description="Users", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="PK", data_type="uuid", is_primary_key=True),)),
-                    SqlTableDefinition(name="orders", description="Orders", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="PK", data_type="uuid", is_primary_key=True), SqlColumnDefinition(name="user_id", description="FK", data_type="uuid"),)),
+                    SqlTableDefinition(
+                        name="users",
+                        description="Users",
+                        user_scoped=False,
+                        columns=(
+                            SqlColumnDefinition(
+                                name="id", description="PK", data_type="uuid", is_primary_key=True
+                            ),
+                        ),
+                    ),
+                    SqlTableDefinition(
+                        name="orders",
+                        description="Orders",
+                        user_scoped=False,
+                        columns=(
+                            SqlColumnDefinition(
+                                name="id", description="PK", data_type="uuid", is_primary_key=True
+                            ),
+                            SqlColumnDefinition(name="user_id", description="FK", data_type="uuid"),
+                        ),
+                    ),
                 ),
                 relationships=(
-                    SqlRelationshipDefinition(left_table="orders", left_column="user_id", right_table="users", right_column="id", relationship_type="many_to_one"),
-                    SqlRelationshipDefinition(left_table="orders", left_column="user_id", right_table="users", right_column="id", relationship_type="many_to_one"),
+                    SqlRelationshipDefinition(
+                        left_table="orders",
+                        left_column="user_id",
+                        right_table="users",
+                        right_column="id",
+                        relationship_type="many_to_one",
+                    ),
+                    SqlRelationshipDefinition(
+                        left_table="orders",
+                        left_column="user_id",
+                        right_table="users",
+                        right_column="id",
+                        relationship_type="many_to_one",
+                    ),
                 ),
             )
 
@@ -288,7 +389,18 @@ class TestSqlSchemaCatalog:
         catalog = SqlSchemaCatalog(
             catalog_name="test",
             catalog_version="1.0",
-            tables=(SqlTableDefinition(name="users", description="Users", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="PK", data_type="uuid", is_primary_key=True),)),),
+            tables=(
+                SqlTableDefinition(
+                    name="users",
+                    description="Users",
+                    user_scoped=False,
+                    columns=(
+                        SqlColumnDefinition(
+                            name="id", description="PK", data_type="uuid", is_primary_key=True
+                        ),
+                    ),
+                ),
+            ),
         )
         with pytest.raises(KeyError):
             catalog.get_table("missing")
@@ -298,8 +410,27 @@ class TestSqlSchemaCatalog:
             catalog_name="test",
             catalog_version="1.0",
             tables=(
-                SqlTableDefinition(name="users", description="Users", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="PK", data_type="uuid", is_primary_key=True),)),
-                SqlTableDefinition(name="internal", description="Internal", allowed_for_select=False, user_scoped=False, columns=(SqlColumnDefinition(name="id", description="PK", data_type="uuid", is_primary_key=True),)),
+                SqlTableDefinition(
+                    name="users",
+                    description="Users",
+                    user_scoped=False,
+                    columns=(
+                        SqlColumnDefinition(
+                            name="id", description="PK", data_type="uuid", is_primary_key=True
+                        ),
+                    ),
+                ),
+                SqlTableDefinition(
+                    name="internal",
+                    description="Internal",
+                    allowed_for_select=False,
+                    user_scoped=False,
+                    columns=(
+                        SqlColumnDefinition(
+                            name="id", description="PK", data_type="uuid", is_primary_key=True
+                        ),
+                    ),
+                ),
             ),
         )
         assert catalog.allowed_table_names() == frozenset({"users"})
@@ -314,8 +445,12 @@ class TestSqlSchemaCatalog:
                     description="Users",
                     user_scoped=False,
                     columns=(
-                        SqlColumnDefinition(name="id", description="PK", data_type="uuid", is_primary_key=True),
-                        SqlColumnDefinition(name="secret", description="Hidden", data_type="text", sensitive=True),
+                        SqlColumnDefinition(
+                            name="id", description="PK", data_type="uuid", is_primary_key=True
+                        ),
+                        SqlColumnDefinition(
+                            name="secret", description="Hidden", data_type="text", sensitive=True
+                        ),
                     ),
                 ),
             ),
@@ -332,8 +467,15 @@ class TestSqlSchemaCatalog:
                     description="Orders",
                     user_scoped=True,
                     columns=(
-                        SqlColumnDefinition(name="id", description="PK", data_type="uuid", is_primary_key=True),
-                        SqlColumnDefinition(name="user_id", description="Owner", data_type="uuid", is_user_scope=True),
+                        SqlColumnDefinition(
+                            name="id", description="PK", data_type="uuid", is_primary_key=True
+                        ),
+                        SqlColumnDefinition(
+                            name="user_id",
+                            description="Owner",
+                            data_type="uuid",
+                            is_user_scope=True,
+                        ),
                     ),
                 ),
             ),
@@ -345,11 +487,43 @@ class TestSqlSchemaCatalog:
             catalog_name="test",
             catalog_version="1.0",
             tables=(
-                SqlTableDefinition(name="users", description="Users", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="PK", data_type="uuid", is_primary_key=True),)),
-                SqlTableDefinition(name="orders", description="Orders", user_scoped=True, columns=(SqlColumnDefinition(name="id", description="PK", data_type="uuid", is_primary_key=True), SqlColumnDefinition(name="user_id", description="FK", data_type="uuid", is_user_scope=True, is_foreign_key=True, foreign_key_target="users.id"),)),
+                SqlTableDefinition(
+                    name="users",
+                    description="Users",
+                    user_scoped=False,
+                    columns=(
+                        SqlColumnDefinition(
+                            name="id", description="PK", data_type="uuid", is_primary_key=True
+                        ),
+                    ),
+                ),
+                SqlTableDefinition(
+                    name="orders",
+                    description="Orders",
+                    user_scoped=True,
+                    columns=(
+                        SqlColumnDefinition(
+                            name="id", description="PK", data_type="uuid", is_primary_key=True
+                        ),
+                        SqlColumnDefinition(
+                            name="user_id",
+                            description="FK",
+                            data_type="uuid",
+                            is_user_scope=True,
+                            is_foreign_key=True,
+                            foreign_key_target="users.id",
+                        ),
+                    ),
+                ),
             ),
             relationships=(
-                SqlRelationshipDefinition(left_table="orders", left_column="user_id", right_table="users", right_column="id", relationship_type="many_to_one"),
+                SqlRelationshipDefinition(
+                    left_table="orders",
+                    left_column="user_id",
+                    right_table="users",
+                    right_column="id",
+                    relationship_type="many_to_one",
+                ),
             ),
         )
         rels = catalog.get_relationships_for_table("orders")

@@ -4,10 +4,18 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "queryguard"
-version = "0.8.0"
+version = "0.9.0"
 description = "Reusable schema catalogs and SQLGlot structural validation for LLM-assisted SQL analytics"
 readme = "README.md"
-requires-python = ">=3.11,<4.0"
+requires-python = ">=3.11,<3.12"
+keywords = ["sql", "analytics", "llm", "validation", "security"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Database",
+]
 dependencies = [
     "pydantic>=2.0,<3.0",
     "PyYAML>=6.0,<7.0",
@@ -15,8 +23,61 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=9.0,<10.0"]
+test = [
+    "pytest>=9.0,<10.0",
+    "pytest-cov>=6.0,<7.0",
+]
+dev = [
+    "pytest>=9.0,<10.0",
+    "pytest-cov>=6.0,<7.0",
+    "ruff>=0.11,<1.0",
+    "mypy>=1.13,<2.0",
+    "build>=1.2,<2.0",
+    "types-PyYAML>=6.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+markers = [
+    "e2e: deterministic end-to-end acceptance tests",
+    "unit: focused module or contract tests",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["queryguard"]
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["queryguard"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "src"
+files = ["src/queryguard"]
+check_untyped_defs = true
+ignore_missing_imports = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unused_ignores = true

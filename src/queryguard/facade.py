@@ -45,7 +45,7 @@ class QueryGuard:
         *,
         provider: SqlGenerationProvider,
         settings: SqlAnalyticsSettings | None = None,
-    ) -> "QueryGuard":
+    ) -> QueryGuard:
         """Build a facade from an application-owned YAML catalog."""
 
         catalog = load_catalog_from_yaml(path)

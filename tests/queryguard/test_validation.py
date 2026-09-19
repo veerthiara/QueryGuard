@@ -1,17 +1,18 @@
 """Tests for SQL Validation Service - Phase 09 Rev 03."""
 
 import pytest
+
 from queryguard.catalog import StaticSqlCatalogProvider
 from queryguard.contracts import (
     GeneratedSql,
+    SqlColumnDefinition,
     SqlSchemaCatalog,
     SqlTableDefinition,
-    SqlColumnDefinition,
 )
 from queryguard.validation import SqlValidationService
 
-
 # ── Commerce Catalog Fixture ───────────────────────────────────────────────────
+
 
 def _commerce_catalog() -> SqlSchemaCatalog:
     """Meaningful generic commerce catalog for testing."""
@@ -26,10 +27,27 @@ def _commerce_catalog() -> SqlSchemaCatalog:
                 user_scoped=False,
                 allowed_for_select=True,
                 columns=(
-                    SqlColumnDefinition(name="id", description="Customer ID", data_type="uuid", is_primary_key=True),
-                    SqlColumnDefinition(name="account_id", description="Account ID", data_type="uuid", nullable=False),
-                    SqlColumnDefinition(name="name", description="Customer name", data_type="varchar(255)", nullable=False),
-                    SqlColumnDefinition(name="created_at", description="Account creation", data_type="timestamp with time zone", nullable=False),
+                    SqlColumnDefinition(
+                        name="id", description="Customer ID", data_type="uuid", is_primary_key=True
+                    ),
+                    SqlColumnDefinition(
+                        name="account_id",
+                        description="Account ID",
+                        data_type="uuid",
+                        nullable=False,
+                    ),
+                    SqlColumnDefinition(
+                        name="name",
+                        description="Customer name",
+                        data_type="varchar(255)",
+                        nullable=False,
+                    ),
+                    SqlColumnDefinition(
+                        name="created_at",
+                        description="Account creation",
+                        data_type="timestamp with time zone",
+                        nullable=False,
+                    ),
                 ),
             ),
             SqlTableDefinition(
@@ -38,12 +56,41 @@ def _commerce_catalog() -> SqlSchemaCatalog:
                 user_scoped=True,
                 allowed_for_select=True,
                 columns=(
-                    SqlColumnDefinition(name="id", description="Order ID", data_type="uuid", is_primary_key=True),
-                    SqlColumnDefinition(name="account_id", description="Account ID", data_type="uuid", nullable=False),
-                    SqlColumnDefinition(name="customer_id", description="Buyer", data_type="uuid", is_foreign_key=True, foreign_key_target="customers.id", is_user_scope=True),
-                    SqlColumnDefinition(name="total_cents", description="Order total in cents", data_type="integer", nullable=False),
-                    SqlColumnDefinition(name="status", description="Order status", data_type="varchar(50)", nullable=False),
-                    SqlColumnDefinition(name="placed_at", description="Order timestamp", data_type="timestamp with time zone", nullable=False),
+                    SqlColumnDefinition(
+                        name="id", description="Order ID", data_type="uuid", is_primary_key=True
+                    ),
+                    SqlColumnDefinition(
+                        name="account_id",
+                        description="Account ID",
+                        data_type="uuid",
+                        nullable=False,
+                    ),
+                    SqlColumnDefinition(
+                        name="customer_id",
+                        description="Buyer",
+                        data_type="uuid",
+                        is_foreign_key=True,
+                        foreign_key_target="customers.id",
+                        is_user_scope=True,
+                    ),
+                    SqlColumnDefinition(
+                        name="total_cents",
+                        description="Order total in cents",
+                        data_type="integer",
+                        nullable=False,
+                    ),
+                    SqlColumnDefinition(
+                        name="status",
+                        description="Order status",
+                        data_type="varchar(50)",
+                        nullable=False,
+                    ),
+                    SqlColumnDefinition(
+                        name="placed_at",
+                        description="Order timestamp",
+                        data_type="timestamp with time zone",
+                        nullable=False,
+                    ),
                 ),
             ),
             SqlTableDefinition(
@@ -52,12 +99,38 @@ def _commerce_catalog() -> SqlSchemaCatalog:
                 user_scoped=True,
                 allowed_for_select=True,
                 columns=(
-                    SqlColumnDefinition(name="id", description="Item ID", data_type="uuid", is_primary_key=True),
-                    SqlColumnDefinition(name="account_id", description="Account ID", data_type="uuid", nullable=False),
-                    SqlColumnDefinition(name="order_id", description="Order reference", data_type="uuid", is_foreign_key=True, foreign_key_target="orders.id", is_user_scope=True),
-                    SqlColumnDefinition(name="product_name", description="Product name", data_type="varchar(255)", nullable=False),
-                    SqlColumnDefinition(name="quantity", description="Quantity", data_type="integer", nullable=False),
-                    SqlColumnDefinition(name="unit_price_cents", description="Unit price in cents", data_type="integer", nullable=False),
+                    SqlColumnDefinition(
+                        name="id", description="Item ID", data_type="uuid", is_primary_key=True
+                    ),
+                    SqlColumnDefinition(
+                        name="account_id",
+                        description="Account ID",
+                        data_type="uuid",
+                        nullable=False,
+                    ),
+                    SqlColumnDefinition(
+                        name="order_id",
+                        description="Order reference",
+                        data_type="uuid",
+                        is_foreign_key=True,
+                        foreign_key_target="orders.id",
+                        is_user_scope=True,
+                    ),
+                    SqlColumnDefinition(
+                        name="product_name",
+                        description="Product name",
+                        data_type="varchar(255)",
+                        nullable=False,
+                    ),
+                    SqlColumnDefinition(
+                        name="quantity", description="Quantity", data_type="integer", nullable=False
+                    ),
+                    SqlColumnDefinition(
+                        name="unit_price_cents",
+                        description="Unit price in cents",
+                        data_type="integer",
+                        nullable=False,
+                    ),
                 ),
             ),
             # Hidden table - not allowed for select
@@ -67,9 +140,21 @@ def _commerce_catalog() -> SqlSchemaCatalog:
                 user_scoped=False,
                 allowed_for_select=False,
                 columns=(
-                    SqlColumnDefinition(name="id", description="Log ID", data_type="uuid", is_primary_key=True),
-                    SqlColumnDefinition(name="action", description="Action performed", data_type="varchar(100)", nullable=False),
-                    SqlColumnDefinition(name="performed_at", description="Timestamp", data_type="timestamp with time zone", nullable=False),
+                    SqlColumnDefinition(
+                        name="id", description="Log ID", data_type="uuid", is_primary_key=True
+                    ),
+                    SqlColumnDefinition(
+                        name="action",
+                        description="Action performed",
+                        data_type="varchar(100)",
+                        nullable=False,
+                    ),
+                    SqlColumnDefinition(
+                        name="performed_at",
+                        description="Timestamp",
+                        data_type="timestamp with time zone",
+                        nullable=False,
+                    ),
                 ),
             ),
         ),
@@ -84,6 +169,7 @@ def _commerce_catalog() -> SqlSchemaCatalog:
 
 # ── Test Fixtures ──────────────────────────────────────────────────────────────
 
+
 @pytest.fixture
 def catalog_provider():
     return StaticSqlCatalogProvider(_commerce_catalog())
@@ -95,6 +181,7 @@ def validation_service():
 
 
 # ── TestSqlValidationService ──────────────────────────────────────────────────
+
 
 class TestSqlValidationService:
     def test_validate_accepts_generated_sql(self, validation_service):
@@ -124,6 +211,7 @@ class TestSqlValidationService:
 
 # ── TestStatementCount ────────────────────────────────────────────────────────
 
+
 class TestStatementCount:
     def test_multiple_statements_rejected(self, validation_service):
         """Multiple statements are rejected."""
@@ -145,6 +233,7 @@ class TestStatementCount:
 
 # ── TestStatementTypeValidation ────────────────────────────────────────────────
 
+
 class TestStatementTypeValidation:
     def test_select_allowed(self, validation_service):
         """SELECT is allowed."""
@@ -153,7 +242,9 @@ class TestStatementTypeValidation:
 
     def test_with_select_allowed(self, validation_service):
         """WITH ... SELECT is allowed."""
-        result = validation_service.validate("WITH cte AS (SELECT id FROM customers) SELECT id FROM cte")
+        result = validation_service.validate(
+            "WITH cte AS (SELECT id FROM customers) SELECT id FROM cte"
+        )
         assert result.valid is True
 
     def test_union_allowed(self, validation_service):
@@ -163,7 +254,9 @@ class TestStatementTypeValidation:
 
     def test_union_all_allowed(self, validation_service):
         """UNION ALL is allowed."""
-        result = validation_service.validate("SELECT id FROM customers UNION ALL SELECT id FROM orders")
+        result = validation_service.validate(
+            "SELECT id FROM customers UNION ALL SELECT id FROM orders"
+        )
         assert result.valid is True
 
     def test_with_union_allowed(self, validation_service):
@@ -175,7 +268,9 @@ class TestStatementTypeValidation:
 
     def test_insert_rejected(self, validation_service):
         """INSERT is rejected."""
-        result = validation_service.validate("INSERT INTO orders (id, account_id, customer_id, total_cents, status, placed_at) VALUES ('a','b','c',100,'new',now())")
+        result = validation_service.validate(
+            "INSERT INTO orders (id, account_id, customer_id, total_cents, status, placed_at) VALUES ('a','b','c',100,'new',now())"
+        )
         assert result.valid is False
         assert any(e.code == "WRITE_OPERATION" for e in result.errors)
 
@@ -218,6 +313,7 @@ class TestStatementTypeValidation:
 
 # ── TestWriteOperationsAnywhere ────────────────────────────────────────────────
 
+
 class TestWriteOperationsAnywhere:
     """Write operations anywhere in AST are rejected or cause parse error."""
 
@@ -254,10 +350,13 @@ class TestWriteOperationsAnywhere:
         ]:
             result = validation_service.validate(sql)
             assert result.valid is False
-            assert any(e.code in ("STATEMENT_NOT_ALLOWED", "WRITE_OPERATION") for e in result.errors)
+            assert any(
+                e.code in ("STATEMENT_NOT_ALLOWED", "WRITE_OPERATION") for e in result.errors
+            )
 
 
 # ── TestWriteOperationsInCTE ──────────────────────────────────────────────────
+
 
 class TestWriteOperationsInCTE:
     """Write operations inside CTEs cause parse errors (parser limitation)."""
@@ -297,6 +396,7 @@ class TestWriteOperationsInCTE:
 
 # ── TestSystemSchemaAccess ────────────────────────────────────────────────────
 
+
 class TestSystemSchemaAccess:
     """System schema access is rejected."""
 
@@ -326,6 +426,7 @@ class TestSystemSchemaAccess:
 
 
 # ── TestDangerousFunctions ────────────────────────────────────────────────────
+
 
 class TestDangerousFunctions:
     """Dangerous functions are rejected."""
@@ -386,6 +487,7 @@ class TestDangerousFunctions:
 
 # ── TestWildcards ──────────────────────────────────────────────────────────────
 
+
 class TestWildcards:
     """Wildcard selection is rejected (except COUNT(*))."""
 
@@ -420,6 +522,7 @@ class TestWildcards:
 
 # ── TestTableValidation ────────────────────────────────────────────────────────
 
+
 class TestTableValidation:
     """Table validation against approved catalog."""
 
@@ -437,7 +540,9 @@ class TestTableValidation:
 
     def test_cte_alias_not_physical_table(self, validation_service):
         """CTE alias is not treated as physical table."""
-        result = validation_service.validate("WITH cte AS (SELECT id FROM orders) SELECT id FROM cte")
+        result = validation_service.validate(
+            "WITH cte AS (SELECT id FROM orders) SELECT id FROM cte"
+        )
         assert result.valid is True
 
     def test_derived_table_alias_not_physical_table(self, validation_service):
@@ -447,7 +552,9 @@ class TestTableValidation:
 
     def test_referenced_tables_sorted_and_canonical(self, validation_service):
         """Referenced tables returned in deterministic sorted order."""
-        result = validation_service.validate("SELECT o.id, c.name FROM orders o JOIN customers c ON o.customer_id = c.id")
+        result = validation_service.validate(
+            "SELECT o.id, c.name FROM orders o JOIN customers c ON o.customer_id = c.id"
+        )
         assert result.valid is True
         tables = list(result.referenced_tables)
         assert tables == sorted(tables)
@@ -456,6 +563,7 @@ class TestTableValidation:
 
 
 # ── TestColumnValidation ──────────────────────────────────────────────────────
+
 
 class TestColumnValidation:
     """Column validation against approved catalog."""
@@ -478,7 +586,9 @@ class TestColumnValidation:
 
     def test_ambiguous_unqualified_column_rejected(self, validation_service):
         """Ambiguous unqualified column across joined tables raises error."""
-        result = validation_service.validate("SELECT id FROM orders JOIN customers ON orders.customer_id = customers.id")
+        result = validation_service.validate(
+            "SELECT id FROM orders JOIN customers ON orders.customer_id = customers.id"
+        )
         assert result.valid is False
         assert any(e.code == "UNQUALIFIED_COLUMN_AMBIGUOUS" for e in result.errors)
 
@@ -529,7 +639,9 @@ class TestColumnValidation:
 
     def test_referenced_columns_sorted_and_canonical(self, validation_service):
         """Referenced columns returned in deterministic sorted order."""
-        result = validation_service.validate("SELECT orders.id, orders.total_cents, customers.name FROM orders JOIN customers ON orders.customer_id = customers.id")
+        result = validation_service.validate(
+            "SELECT orders.id, orders.total_cents, customers.name FROM orders JOIN customers ON orders.customer_id = customers.id"
+        )
         assert result.valid is True
         cols = list(result.referenced_columns)
         assert cols == sorted(cols)
@@ -538,6 +650,7 @@ class TestColumnValidation:
 
 
 # ── TestNestedQueryScope ──────────────────────────────────────────────────────
+
 
 class TestNestedQueryScope:
     """Nested query scope handling."""
@@ -598,14 +711,13 @@ class TestNestedQueryScope:
 
 # ── TestSetOperations ─────────────────────────────────────────────────────────
 
+
 class TestSetOperations:
     """UNION and UNION ALL validation."""
 
     def test_union_both_branches_valid(self, validation_service):
         """UNION with both branches valid is allowed."""
-        result = validation_service.validate(
-            "SELECT id FROM customers UNION SELECT id FROM orders"
-        )
+        result = validation_service.validate("SELECT id FROM customers UNION SELECT id FROM orders")
         assert result.valid is True
 
     def test_union_all_both_branches_valid(self, validation_service):
@@ -625,6 +737,7 @@ class TestSetOperations:
 
 
 # ── TestMetadataComparison ────────────────────────────────────────────────────
+
 
 class TestMetadataComparison:
     """Model-reported metadata vs parsed references."""
@@ -649,7 +762,9 @@ class TestMetadataComparison:
         )
         result = validation_service.validate(gen_sql)
         assert result.valid is True
-        assert any("Model-reported tables differ from parsed SQL references." in w for w in result.warnings)
+        assert any(
+            "Model-reported tables differ from parsed SQL references." in w for w in result.warnings
+        )
 
     def test_model_columns_differ_warning(self, validation_service):
         """Model columns differ from parsed -> warning."""
@@ -660,7 +775,10 @@ class TestMetadataComparison:
         )
         result = validation_service.validate(gen_sql)
         assert result.valid is True
-        assert any("Model-reported columns differ from parsed SQL references." in w for w in result.warnings)
+        assert any(
+            "Model-reported columns differ from parsed SQL references." in w
+            for w in result.warnings
+        )
 
     def test_parser_always_wins_for_references(self, validation_service):
         """Parser-derived references always returned in result."""
@@ -680,6 +798,7 @@ class TestMetadataComparison:
 
 
 # ── TestNormalization ─────────────────────────────────────────────────────────
+
 
 class TestNormalization:
     """Normalized SQL output."""
@@ -711,6 +830,7 @@ class TestNormalization:
 
 # ── TestDeterministicOrdering ────────────────────────────────────────────────
 
+
 class TestDeterministicOrdering:
     """Referenced tables/columns returned in deterministic order."""
 
@@ -735,6 +855,7 @@ class TestDeterministicOrdering:
 
 # ── TestErrorDeduplication ────────────────────────────────────────────────────
 
+
 class TestErrorDeduplication:
     """Prevent duplicate validation errors."""
 
@@ -756,9 +877,7 @@ class TestErrorDeduplication:
 
     def test_multiple_errors_for_different_issues(self, validation_service):
         """Different issues produce separate errors."""
-        result = validation_service.validate(
-            "SELECT pg_sleep(10), pg_read_file('/etc/passwd')"
-        )
+        result = validation_service.validate("SELECT pg_sleep(10), pg_read_file('/etc/passwd')")
         assert result.valid is False
         dangerous_errors = [e for e in result.errors if e.code == "DANGEROUS_FUNCTION"]
         # Both functions should be reported
@@ -766,6 +885,7 @@ class TestErrorDeduplication:
 
 
 # ── TestStatementTypeErrors ──────────────────────────────────────────────────
+
 
 class TestStatementTypeErrors:
     """Stable error codes for statement categories."""
@@ -828,7 +948,9 @@ class TestStatementTypeErrors:
 
     def test_unqualified_column_ambiguous_code(self, validation_service):
         """UNQUALIFIED_COLUMN_AMBIGUOUS code for ambiguous columns."""
-        result = validation_service.validate("SELECT id FROM orders JOIN customers ON orders.customer_id = customers.id")
+        result = validation_service.validate(
+            "SELECT id FROM orders JOIN customers ON orders.customer_id = customers.id"
+        )
         assert any(e.code == "UNQUALIFIED_COLUMN_AMBIGUOUS" for e in result.errors)
 
     def test_wildcard_not_allowed_code(self, validation_service):
@@ -844,12 +966,23 @@ class TestStatementTypeErrors:
     def test_unsupported_dialect_code(self, validation_service):
         """UNSUPPORTED_DIALECT code for unsupported catalog dialect."""
         # Create a catalog with unsupported dialect
-        from queryguard.contracts import SqlSchemaCatalog, SqlTableDefinition, SqlColumnDefinition
+        from queryguard.contracts import SqlColumnDefinition, SqlSchemaCatalog, SqlTableDefinition
+
         bad_catalog = SqlSchemaCatalog(
             catalog_name="test",
             catalog_version="1",
             dialect="mysql",  # Unsupported
-            tables=(SqlTableDefinition(name="t", description="x", columns=(SqlColumnDefinition(name="id", description="x", data_type="int", is_primary_key=True),)),),
+            tables=(
+                SqlTableDefinition(
+                    name="t",
+                    description="x",
+                    columns=(
+                        SqlColumnDefinition(
+                            name="id", description="x", data_type="int", is_primary_key=True
+                        ),
+                    ),
+                ),
+            ),
         )
         service = SqlValidationService(catalog_provider=StaticSqlCatalogProvider(bad_catalog))
         result = service.validate("SELECT 1")
@@ -857,6 +990,7 @@ class TestStatementTypeErrors:
 
 
 # ── TestParserLimitations ────────────────────────────────────────────────────
+
 
 class TestParserLimitations:
     """Parser limitation tests - documented cases where SQLGlot cannot parse valid PostgreSQL."""
@@ -904,6 +1038,7 @@ class TestParserLimitations:
 
 # ── TestHarmlessAliases ──────────────────────────────────────────────────────
 
+
 class TestHarmlessAliases:
     """Harmless aliases containing system-like text should be allowed."""
 
@@ -929,6 +1064,7 @@ class TestHarmlessAliases:
 
 
 # ── TestJoins ─────────────────────────────────────────────────────────────────
+
 
 class TestJoins:
     """Join validation."""
@@ -963,8 +1099,8 @@ class TestJoins:
         assert result.valid is True
 
 
-
 # ── TestDialectHandling ──────────────────────────────────────────────────────
+
 
 class TestDialectHandling:
     """Dialect mapping from catalog to SQLGlot."""
@@ -976,12 +1112,23 @@ class TestDialectHandling:
 
     def test_postgres_dialect_mapped_to_postgres(self):
         """postgres catalog dialect maps to postgres SQLGlot dialect."""
-        from queryguard.contracts import SqlSchemaCatalog, SqlTableDefinition, SqlColumnDefinition
+        from queryguard.contracts import SqlColumnDefinition, SqlSchemaCatalog, SqlTableDefinition
+
         catalog = SqlSchemaCatalog(
             catalog_name="test",
             catalog_version="1",
             dialect="postgres",
-            tables=(SqlTableDefinition(name="t", description="x", columns=(SqlColumnDefinition(name="id", description="x", data_type="int", is_primary_key=True),)),),
+            tables=(
+                SqlTableDefinition(
+                    name="t",
+                    description="x",
+                    columns=(
+                        SqlColumnDefinition(
+                            name="id", description="x", data_type="int", is_primary_key=True
+                        ),
+                    ),
+                ),
+            ),
         )
         service = SqlValidationService(catalog_provider=StaticSqlCatalogProvider(catalog))
         result = service.validate("SELECT id FROM t")

@@ -108,9 +108,11 @@ def parse_catalog_yaml(content: str) -> SqlSchemaCatalog:
         catalog_data["global_rules"] = global_rules
 
     try:
-        return SqlSchemaCatalog(**catalog_data)
+        return SqlSchemaCatalog.model_validate(catalog_data)
     except ValidationError as exc:
-        raise CatalogYamlError(f"catalog validation failed: {_format_validation_error(exc)}") from exc
+        raise CatalogYamlError(
+            f"catalog validation failed: {_format_validation_error(exc)}"
+        ) from exc
 
 
 def _map_catalog(section: Mapping[object, object]) -> dict[str, object]:
@@ -123,7 +125,11 @@ def _map_table(section: Mapping[object, object], index: int) -> dict[str, object
     columns = _require_list(section.get("columns"), f"tables[{index}].columns")
     table = {key: section[key] for key in _TABLE_KEYS - {"columns"} if key in section}
     table["columns"] = tuple(
-        _map_column(_require_mapping(column, f"tables[{index}].columns[{column_index}]"), index, column_index)
+        _map_column(
+            _require_mapping(column, f"tables[{index}].columns[{column_index}]"),
+            index,
+            column_index,
+        )
         for column_index, column in enumerate(columns)
     )
     return table
@@ -151,7 +157,7 @@ def _map_column(
 
 def _map_relationship(section: Mapping[object, object], index: int) -> dict[str, object]:
     _validate_known_keys(section, _RELATIONSHIP_KEYS, f"relationships[{index}]")
-    return dict(section)
+    return {key: value for key, value in section.items() if isinstance(key, str)}
 
 
 def _require_mapping(value: object, context: str) -> Mapping[object, object]:

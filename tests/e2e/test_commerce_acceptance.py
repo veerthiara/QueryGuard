@@ -18,6 +18,8 @@ import pytest
 
 from queryguard import QueryGuard
 
+pytestmark = pytest.mark.e2e
+
 
 EXAMPLE_PATH = Path(__file__).parents[2] / "examples" / "commerce_catalog.yaml"
 
@@ -290,10 +292,7 @@ POLICY_REJECTION_CASES = (
     ),
     RejectionCase(
         name="unsafe OR scope",
-        sql=(
-            "SELECT id FROM orders WHERE account_id = @user_id "
-            "OR status = 'public' LIMIT 10"
-        ),
+        sql=("SELECT id FROM orders WHERE account_id = @user_id OR status = 'public' LIMIT 10"),
         expected_codes=frozenset({"USER_SCOPE_AMBIGUOUS"}),
     ),
     RejectionCase(

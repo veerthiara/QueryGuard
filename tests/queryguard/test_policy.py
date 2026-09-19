@@ -24,8 +24,12 @@ def _commerce_catalog() -> SqlSchemaCatalog:
                 name="customers",
                 description="Customer accounts",
                 columns=(
-                    SqlColumnDefinition(name="id", description="Customer ID", data_type="uuid", is_primary_key=True),
-                    SqlColumnDefinition(name="account_id", description="Account ID", data_type="uuid"),
+                    SqlColumnDefinition(
+                        name="id", description="Customer ID", data_type="uuid", is_primary_key=True
+                    ),
+                    SqlColumnDefinition(
+                        name="account_id", description="Account ID", data_type="uuid"
+                    ),
                     SqlColumnDefinition(name="name", description="Customer name", data_type="text"),
                 ),
             ),
@@ -35,11 +39,24 @@ def _commerce_catalog() -> SqlSchemaCatalog:
                 user_scoped=True,
                 scope_strategy="direct",
                 columns=(
-                    SqlColumnDefinition(name="id", description="Order ID", data_type="uuid", is_primary_key=True),
-                    SqlColumnDefinition(name="account_id", description="Account ID", data_type="uuid", is_user_scope=True),
-                    SqlColumnDefinition(name="customer_id", description="Customer ID", data_type="uuid"),
-                    SqlColumnDefinition(name="total_cents", description="Order total", data_type="integer"),
-                    SqlColumnDefinition(name="status", description="Order status", data_type="text"),
+                    SqlColumnDefinition(
+                        name="id", description="Order ID", data_type="uuid", is_primary_key=True
+                    ),
+                    SqlColumnDefinition(
+                        name="account_id",
+                        description="Account ID",
+                        data_type="uuid",
+                        is_user_scope=True,
+                    ),
+                    SqlColumnDefinition(
+                        name="customer_id", description="Customer ID", data_type="uuid"
+                    ),
+                    SqlColumnDefinition(
+                        name="total_cents", description="Order total", data_type="integer"
+                    ),
+                    SqlColumnDefinition(
+                        name="status", description="Order status", data_type="text"
+                    ),
                 ),
             ),
             SqlTableDefinition(
@@ -48,10 +65,19 @@ def _commerce_catalog() -> SqlSchemaCatalog:
                 user_scoped=True,
                 scope_strategy="direct",
                 columns=(
-                    SqlColumnDefinition(name="id", description="Item ID", data_type="uuid", is_primary_key=True),
-                    SqlColumnDefinition(name="account_id", description="Account ID", data_type="uuid", is_user_scope=True),
+                    SqlColumnDefinition(
+                        name="id", description="Item ID", data_type="uuid", is_primary_key=True
+                    ),
+                    SqlColumnDefinition(
+                        name="account_id",
+                        description="Account ID",
+                        data_type="uuid",
+                        is_user_scope=True,
+                    ),
                     SqlColumnDefinition(name="order_id", description="Order ID", data_type="uuid"),
-                    SqlColumnDefinition(name="product_name", description="Product name", data_type="text"),
+                    SqlColumnDefinition(
+                        name="product_name", description="Product name", data_type="text"
+                    ),
                 ),
             ),
         ),
@@ -62,7 +88,9 @@ def _commerce_catalog() -> SqlSchemaCatalog:
 def policy() -> SqlPolicyValidationService:
     return SqlPolicyValidationService(
         StaticSqlCatalogProvider(_commerce_catalog()),
-        SqlAnalyticsSettings(required_scope_parameter="user_id", default_result_limit=50, max_result_limit=500),
+        SqlAnalyticsSettings(
+            required_scope_parameter="user_id", default_result_limit=50, max_result_limit=500
+        ),
     )
 
 
@@ -114,7 +142,9 @@ def test_invalid_direct_scope_predicates_are_rejected(policy, sql, code):
 
 
 def test_or_scope_predicate_is_rejected_conservatively(policy):
-    result = policy.validate("SELECT id FROM orders WHERE account_id = @user_id OR status = 'public'")
+    result = policy.validate(
+        "SELECT id FROM orders WHERE account_id = @user_id OR status = 'public'"
+    )
     assert "USER_SCOPE_AMBIGUOUS" in _codes(result)
 
 
@@ -134,7 +164,14 @@ def test_unsupported_scope_strategy_is_rejected():
                 description="Data",
                 user_scoped=True,
                 scope_strategy="relationship",
-                columns=(SqlColumnDefinition(name="account_id", description="Account", data_type="uuid", is_user_scope=True),),
+                columns=(
+                    SqlColumnDefinition(
+                        name="account_id",
+                        description="Account",
+                        data_type="uuid",
+                        is_user_scope=True,
+                    ),
+                ),
             ),
         ),
     )
@@ -256,10 +293,12 @@ def test_valid_limit_and_effective_limit(policy):
 
 
 def test_max_limit_is_configurable(policy):
-    assert policy.validate("SELECT id FROM orders WHERE account_id = @user_id LIMIT 500").valid is True
-    assert _codes(policy.validate("SELECT id FROM orders WHERE account_id = @user_id LIMIT 501")) == [
-        "RESULT_LIMIT_TOO_HIGH"
-    ]
+    assert (
+        policy.validate("SELECT id FROM orders WHERE account_id = @user_id LIMIT 500").valid is True
+    )
+    assert _codes(
+        policy.validate("SELECT id FROM orders WHERE account_id = @user_id LIMIT 501")
+    ) == ["RESULT_LIMIT_TOO_HIGH"]
 
 
 @pytest.mark.parametrize("limit", ["0", "-1", "@limit", "?", "$1", "some_column"])
@@ -295,9 +334,12 @@ def test_group_by_and_distinct_require_limit(policy):
     distinct = policy.validate("SELECT DISTINCT status FROM orders WHERE account_id = @user_id")
     assert _codes(group_by) == ["RESULT_LIMIT_REQUIRED"]
     assert _codes(distinct) == ["RESULT_LIMIT_REQUIRED"]
-    assert policy.validate(
-        "SELECT status, COUNT(*) FROM orders WHERE account_id = @user_id GROUP BY status LIMIT 10"
-    ).valid is True
+    assert (
+        policy.validate(
+            "SELECT status, COUNT(*) FROM orders WHERE account_id = @user_id GROUP BY status LIMIT 10"
+        ).valid
+        is True
+    )
 
 
 def test_cte_inner_limit_does_not_become_the_final_effective_limit(policy):

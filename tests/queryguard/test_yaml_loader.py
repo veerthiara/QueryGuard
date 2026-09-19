@@ -6,7 +6,6 @@ import pytest
 
 from queryguard import CatalogYamlError, load_catalog_from_yaml, parse_catalog_yaml
 
-
 EXAMPLE_PATH = Path(__file__).parents[2] / "examples" / "commerce_catalog.yaml"
 
 VALID_YAML = """
@@ -30,7 +29,11 @@ def test_valid_example_loads():
 
 def test_catalog_metadata_maps_correctly():
     catalog = load_catalog_from_yaml(EXAMPLE_PATH)
-    assert (catalog.catalog_name, catalog.catalog_version, catalog.dialect) == ("commerce", "1.0", "postgresql")
+    assert (catalog.catalog_name, catalog.catalog_version, catalog.dialect) == (
+        "commerce",
+        "1.0",
+        "postgresql",
+    )
 
 
 def test_table_metadata_maps_correctly():
@@ -57,7 +60,9 @@ def test_relationships_map_correctly():
 
 
 def test_aliases_map_correctly():
-    assert load_catalog_from_yaml(EXAMPLE_PATH).get_table("customers").aliases == ("customer_accounts",)
+    assert load_catalog_from_yaml(EXAMPLE_PATH).get_table("customers").aliases == (
+        "customer_accounts",
+    )
 
 
 def test_business_rules_map_correctly():
@@ -135,12 +140,16 @@ def test_unknown_top_level_key_raises_catalog_yaml_error():
 
 def test_unknown_table_key_raises_catalog_yaml_error():
     with pytest.raises(CatalogYamlError, match="unknown key.*tables\\[0\\]"):
-        parse_catalog_yaml(VALID_YAML.replace("    columns:", "    misspelled_table_key: true\n    columns:"))
+        parse_catalog_yaml(
+            VALID_YAML.replace("    columns:", "    misspelled_table_key: true\n    columns:")
+        )
 
 
 def test_unknown_column_key_raises_catalog_yaml_error():
     with pytest.raises(CatalogYamlError, match="unknown key.*columns"):
-        parse_catalog_yaml(VALID_YAML.replace("        primary_key: true", "        primay_key: true"))
+        parse_catalog_yaml(
+            VALID_YAML.replace("        primary_key: true", "        primay_key: true")
+        )
 
 
 def test_unknown_relationship_key_raises_catalog_yaml_error():

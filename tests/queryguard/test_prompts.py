@@ -4,7 +4,6 @@ import pytest
 
 from queryguard import build_sql_generation_messages
 
-
 SCHEMA_CONTEXT = "Database dialect: postgresql\nTable: orders\nColumns:\n- id (uuid)"
 
 

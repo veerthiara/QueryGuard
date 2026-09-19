@@ -85,7 +85,9 @@ def _parse_provider_response(response: str) -> GeneratedSql:
     try:
         payload = json.loads(response)
     except json.JSONDecodeError as exc:
-        raise SqlGenerationResponseError("provider response must be exactly one JSON object") from exc
+        raise SqlGenerationResponseError(
+            "provider response must be exactly one JSON object"
+        ) from exc
 
     if not isinstance(payload, dict):
         raise SqlGenerationResponseError("provider response JSON must be an object")

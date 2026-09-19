@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import sqlglot
 from sqlglot import expressions as exp
-from sqlglot.optimizer.scope import traverse_scope
+from sqlglot.optimizer.scope import Scope, traverse_scope
 
 from queryguard.catalog import SqlCatalogProvider
 from queryguard.contracts import SqlPolicyError, SqlPolicyValidationResult, SqlSchemaCatalog
@@ -38,7 +38,7 @@ def _is_bind_parameter(node: exp.Expression, required_parameter: str) -> bool:
     if not isinstance(node, exp.Column):
         return False
     name = node.name
-    if not name:
+    if not isinstance(name, str) or not name:
         return False
     if name.startswith("@"):
         return name[1:] == required_parameter
@@ -48,35 +48,38 @@ def _is_bind_parameter(node: exp.Expression, required_parameter: str) -> bool:
 
 
 def _is_scalar_no_from(select: exp.Select) -> bool:
-    return select.args.get("from") is None
+    return bool(select.args.get("from") is None)
 
 
 def _has_group_by(select: exp.Select) -> bool:
-    return select.args.get("group") is not None
+    return bool(select.args.get("group") is not None)
 
 
 def _contains_aggregate(expression: exp.Expression) -> bool:
     if isinstance(expression, exp.AggFunc):
         return True
     if isinstance(expression, exp.Func) and expression.name.lower() in {
-        "count", "sum", "avg", "min", "max", "array_agg", "string_agg"
+        "count",
+        "sum",
+        "avg",
+        "min",
+        "max",
+        "array_agg",
+        "string_agg",
     }:
         return True
     return any(
-        isinstance(child, exp.AggFunc)
-        for child in expression.walk()
-        if child is not expression
+        isinstance(child, exp.AggFunc) for child in expression.walk() if child is not expression
     )
 
 
 def _is_single_row_aggregate(select: exp.Select) -> bool:
-    return (
-        not _has_group_by(select)
-        and any(_contains_aggregate(expression) for expression in select.args.get("expressions", ()))
+    return not _has_group_by(select) and any(
+        _contains_aggregate(expression) for expression in select.args.get("expressions", ())
     )
 
 
-def _physical_sources_in_scope(scope: object) -> dict[str, tuple[exp.Expression, str]]:
+def _physical_sources_in_scope(scope: Scope) -> dict[str, tuple[exp.Expression, str]]:
     """Return physical-table reads visible directly in one SQLGlot scope."""
 
     physical: dict[str, tuple[exp.Expression, str]] = {}
@@ -155,7 +158,9 @@ class SqlPolicyValidationService:
         catalog = self._catalog_provider.get_catalog()
         dialect = _map_dialect(catalog.dialect)
         if dialect is None:
-            return self._invalid("UNSUPPORTED_DIALECT", f"Unsupported catalog dialect: {catalog.dialect}")
+            return self._invalid(
+                "UNSUPPORTED_DIALECT", f"Unsupported catalog dialect: {catalog.dialect}"
+            )
 
         try:
             parsed = sqlglot.parse(sql, read=dialect)
@@ -214,10 +219,12 @@ class SqlPolicyValidationService:
         try:
             scopes = list(traverse_scope(statement))
         except Exception as exc:
-            return [SqlPolicyError(
-                code="UNSUPPORTED_SQL_FEATURE",
-                message=f"Scope analysis failed: {type(exc).__name__}",
-            )], scoped_tables
+            return [
+                SqlPolicyError(
+                    code="UNSUPPORTED_SQL_FEATURE",
+                    message=f"Scope analysis failed: {type(exc).__name__}",
+                )
+            ], scoped_tables
 
         for scope in scopes:
             physical_sources = _physical_sources_in_scope(scope)
@@ -228,14 +235,16 @@ class SqlPolicyValidationService:
                 if not table.user_scoped:
                     continue
                 if table.scope_strategy != "direct":
-                    errors.append(SqlPolicyError(
-                        code="USER_SCOPE_UNSUPPORTED",
-                        message=(
-                            f"Table '{physical_name}' has unsupported scope strategy: "
-                            f"{table.scope_strategy}"
-                        ),
-                        context=physical_name,
-                    ))
+                    errors.append(
+                        SqlPolicyError(
+                            code="USER_SCOPE_UNSUPPORTED",
+                            message=(
+                                f"Table '{physical_name}' has unsupported scope strategy: "
+                                f"{table.scope_strategy}"
+                            ),
+                            context=physical_name,
+                        )
+                    )
                     continue
                 user_scope_columns = {column.name.lower() for column in table.user_scope_columns()}
                 if not user_scope_columns:
@@ -249,16 +258,18 @@ class SqlPolicyValidationService:
                 if proven:
                     scoped_tables.add(physical_name)
                     continue
-                errors.append(SqlPolicyError(
-                    code=code,
-                    message=self._scope_error_message(code, physical_name),
-                    context=physical_name,
-                ))
+                errors.append(
+                    SqlPolicyError(
+                        code=code,
+                        message=self._scope_error_message(code, physical_name),
+                        context=physical_name,
+                    )
+                )
         return errors, scoped_tables
 
     def _check_scope_predicates(
         self,
-        scope: object,
+        scope: Scope,
         table_alias: str,
         user_scope_columns: set[str],
         physical_source_count: int,
@@ -276,8 +287,14 @@ class SqlPolicyValidationService:
         for predicate in predicates:
             if not isinstance(predicate, exp.EQ):
                 continue
-            for column_side, value_side in ((predicate.left, predicate.right), (predicate.right, predicate.left)):
-                if not isinstance(column_side, exp.Column) or column_side.name.lower() not in user_scope_columns:
+            for column_side, value_side in (
+                (predicate.left, predicate.right),
+                (predicate.right, predicate.left),
+            ):
+                if (
+                    not isinstance(column_side, exp.Column)
+                    or column_side.name.lower() not in user_scope_columns
+                ):
                     continue
                 if column_side.table:
                     qualifier = (
@@ -294,9 +311,17 @@ class SqlPolicyValidationService:
                     return True, ""
                 if isinstance(value_side, exp.Column):
                     parameter_name = value_side.name
-                    if parameter_name and parameter_name.startswith("@") and parameter_name[1:] != required_parameter:
+                    if (
+                        parameter_name
+                        and parameter_name.startswith("@")
+                        and parameter_name[1:] != required_parameter
+                    ):
                         return False, "USER_SCOPE_PARAMETER_REQUIRED"
-                    if parameter_name and parameter_name.startswith("$") and parameter_name[1:] != required_parameter:
+                    if (
+                        parameter_name
+                        and parameter_name.startswith("$")
+                        and parameter_name[1:] != required_parameter
+                    ):
                         return False, "USER_SCOPE_PARAMETER_REQUIRED"
                     if parameter_name == "?" and required_parameter != "?":
                         return False, "USER_SCOPE_PARAMETER_REQUIRED"
@@ -308,7 +333,9 @@ class SqlPolicyValidationService:
         if code == "USER_SCOPE_AMBIGUOUS":
             return f"Table '{table_name}' scope predicate contains unsafe boolean logic (OR)"
         if code == "USER_SCOPE_LITERAL_NOT_ALLOWED":
-            return f"Table '{table_name}' uses literal value instead of bind parameter for user scope"
+            return (
+                f"Table '{table_name}' uses literal value instead of bind parameter for user scope"
+            )
         if code == "USER_SCOPE_PARAMETER_REQUIRED":
             return (
                 f"Table '{table_name}' requires the @{self._settings.required_scope_parameter} "
@@ -336,17 +363,25 @@ class SqlPolicyValidationService:
         limit = _top_level_limit(statement)
         effective_limit = _extract_effective_limit(statement)
         if limit is not None and effective_limit is None:
-            return [SqlPolicyError(code="INVALID_LIMIT", message="LIMIT must be a positive integer")], None
+            return [
+                SqlPolicyError(code="INVALID_LIMIT", message="LIMIT must be a positive integer")
+            ], None
         if effective_limit is not None and effective_limit > self._settings.max_result_limit:
-            return [SqlPolicyError(
-                code="RESULT_LIMIT_TOO_HIGH",
-                message=(
-                    f"LIMIT {effective_limit} exceeds maximum allowed "
-                    f"{self._settings.max_result_limit}"
-                ),
-            )], None
+            return [
+                SqlPolicyError(
+                    code="RESULT_LIMIT_TOO_HIGH",
+                    message=(
+                        f"LIMIT {effective_limit} exceeds maximum allowed "
+                        f"{self._settings.max_result_limit}"
+                    ),
+                )
+            ], None
         if self._needs_limit(statement) and limit is None:
-            return [SqlPolicyError(code="RESULT_LIMIT_REQUIRED", message="Query requires a LIMIT clause")], None
+            return [
+                SqlPolicyError(
+                    code="RESULT_LIMIT_REQUIRED", message="Query requires a LIMIT clause"
+                )
+            ], None
         return [], effective_limit
 
     @staticmethod

@@ -1,12 +1,13 @@
 """Tests for generic catalog provider."""
 
 import pytest
+
 from queryguard.catalog import (
+    LazySqlCatalogProvider,
     SqlCatalogProvider,
     StaticSqlCatalogProvider,
-    LazySqlCatalogProvider,
 )
-from queryguard.contracts import SqlSchemaCatalog, SqlTableDefinition, SqlColumnDefinition
+from queryguard.contracts import SqlColumnDefinition, SqlSchemaCatalog, SqlTableDefinition
 
 
 class TestSqlCatalogProvider:
@@ -21,7 +22,16 @@ class TestStaticSqlCatalogProvider:
             catalog_name="test",
             catalog_version="1.0",
             tables=(
-                SqlTableDefinition(name="t", description="x", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="x", data_type="uuid", is_primary_key=True),)),
+                SqlTableDefinition(
+                    name="t",
+                    description="x",
+                    user_scoped=False,
+                    columns=(
+                        SqlColumnDefinition(
+                            name="id", description="x", data_type="uuid", is_primary_key=True
+                        ),
+                    ),
+                ),
             ),
         )
         provider = StaticSqlCatalogProvider(catalog)
@@ -31,7 +41,18 @@ class TestStaticSqlCatalogProvider:
         catalog = SqlSchemaCatalog(
             catalog_name="test",
             catalog_version="1.0",
-            tables=(SqlTableDefinition(name="t", description="x", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="x", data_type="uuid", is_primary_key=True),)),),
+            tables=(
+                SqlTableDefinition(
+                    name="t",
+                    description="x",
+                    user_scoped=False,
+                    columns=(
+                        SqlColumnDefinition(
+                            name="id", description="x", data_type="uuid", is_primary_key=True
+                        ),
+                    ),
+                ),
+            ),
         )
         provider = StaticSqlCatalogProvider(catalog)
         assert provider.get_catalog() is provider.get_catalog()
@@ -47,7 +68,18 @@ class TestLazySqlCatalogProvider:
             return SqlSchemaCatalog(
                 catalog_name="test",
                 catalog_version="1.0",
-                tables=(SqlTableDefinition(name="t", description="x", user_scoped=False, columns=(SqlColumnDefinition(name="id", description="x", data_type="uuid", is_primary_key=True),)),),
+                tables=(
+                    SqlTableDefinition(
+                        name="t",
+                        description="x",
+                        user_scoped=False,
+                        columns=(
+                            SqlColumnDefinition(
+                                name="id", description="x", data_type="uuid", is_primary_key=True
+                            ),
+                        ),
+                    ),
+                ),
             )
 
         provider = LazySqlCatalogProvider(factory)

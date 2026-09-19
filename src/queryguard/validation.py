@@ -17,32 +17,36 @@ from queryguard.contracts import (
     SqlValidationResult,
 )
 
-
 # ── Configuration ────────────────────────────────────────────────────────────────
 
 # System schemas to reject (case-insensitive)
-_SYSTEM_SCHEMAS: frozenset[str] = frozenset({
-    "pg_catalog",
-    "information_schema",
-    "pg_toast",
-    "pg_temp",
-    "pg_internal",
-})
+_SYSTEM_SCHEMAS: frozenset[str] = frozenset(
+    {
+        "pg_catalog",
+        "information_schema",
+        "pg_toast",
+        "pg_temp",
+        "pg_internal",
+    }
+)
 
 # Prohibited function names (case-insensitive)
-_PROHIBITED_FUNCTIONS: frozenset[str] = frozenset({
-    "pg_sleep",
-    "pg_terminate_backend",
-    "pg_cancel_backend",
-    "dblink_connect",
-    "lo_import",
-    "lo_export",
-    "pg_read_file",
-    "pg_read_binary_file",
-})
+_PROHIBITED_FUNCTIONS: frozenset[str] = frozenset(
+    {
+        "pg_sleep",
+        "pg_terminate_backend",
+        "pg_cancel_backend",
+        "dblink_connect",
+        "lo_import",
+        "lo_export",
+        "pg_read_file",
+        "pg_read_binary_file",
+    }
+)
 
 
 # ── Dialect Mapping ──────────────────────────────────────────────────────────────
+
 
 def _map_dialect(catalog_dialect: str) -> str | None:
     """Map catalog dialect name to SQLGlot dialect name."""
@@ -55,10 +59,11 @@ def _map_dialect(catalog_dialect: str) -> str | None:
 
 # ── Helpers ──────────────────────────────────────────────────────────────────────
 
+
 def _normalize_identifier(name: str | exp.Expression) -> str:
     """Normalize identifier for case-insensitive comparison."""
     if isinstance(name, exp.Expression):
-        name = name.this if hasattr(name, 'this') else str(name)
+        name = name.this if hasattr(name, "this") else str(name)
     return name.lower()
 
 
@@ -81,7 +86,7 @@ def _get_schema_name(node: exp.Expression) -> str | None:
     if isinstance(node, exp.Table):
         db = node.args.get("db")
         if db is not None:
-            return db.this if hasattr(db, 'this') else str(db)
+            return db.this if hasattr(db, "this") else str(db)
     return None
 
 
@@ -115,7 +120,11 @@ def _is_cte_source(source_node: exp.Expression, source_obj: object) -> bool:
 
 def _source_label(source_node: exp.Expression | None, source_obj: object | None) -> str:
     """Human-readable source category for validation messages."""
-    if source_node is not None and source_obj is not None and _is_cte_source(source_node, source_obj):
+    if (
+        source_node is not None
+        and source_obj is not None
+        and _is_cte_source(source_node, source_obj)
+    ):
         return "CTE"
     if source_obj is not None and _is_scope_source(source_obj):
         return "derived table"
@@ -203,7 +212,10 @@ def _resolve_unqualified_column(
     for source_node, source_obj in visible_sources.values():
         if isinstance(source_obj, exp.Table):
             physical_table = _normalize_identifier(source_obj.name)
-            if physical_table in catalog.allowed_table_names() and col_lower in catalog.allowed_columns(physical_table):
+            if (
+                physical_table in catalog.allowed_table_names()
+                and col_lower in catalog.allowed_columns(physical_table)
+            ):
                 matches.append(frozenset({f"{physical_table}.{col_lower}"}))
         elif _is_cte_source(source_node, source_obj):
             output_columns = scope_outputs.get(id(source_obj), {})
@@ -244,27 +256,32 @@ def _build_scope_output_columns(
         if not output_name:
             continue
 
-        physical_columns = set()
+        physical_columns: set[str] = set()
         lineage_expression = select_expr.this if isinstance(select_expr, exp.Alias) else select_expr
 
         for column in _iter_lineage_columns(lineage_expression):
-            resolution = _resolve_qualified_column(
-                col_name=column.name,
-                table_qualifier=column.table,
-                catalog=catalog,
-                visible_sources=visible_sources,
-                outer_scopes=outer_scopes,
-                scope_outputs=scope_outputs,
-            ) if column.table else _resolve_unqualified_column(
-                col_name=column.name,
-                catalog=catalog,
-                visible_sources=visible_sources,
-                scope_outputs=scope_outputs,
+            resolution = (
+                _resolve_qualified_column(
+                    col_name=column.name,
+                    table_qualifier=column.table,
+                    catalog=catalog,
+                    visible_sources=visible_sources,
+                    outer_scopes=outer_scopes,
+                    scope_outputs=scope_outputs,
+                )
+                if column.table
+                else _resolve_unqualified_column(
+                    col_name=column.name,
+                    catalog=catalog,
+                    visible_sources=visible_sources,
+                    scope_outputs=scope_outputs,
+                )
             )
 
             if resolution in (_COLUMN_AMBIGUOUS, _COLUMN_MISSING, None):
                 continue
-            physical_columns.update(resolution)
+            if isinstance(resolution, frozenset):
+                physical_columns.update(resolution)
 
         output_columns[output_name] = frozenset(physical_columns)
 
@@ -272,6 +289,7 @@ def _build_scope_output_columns(
 
 
 # ── Main Validator ───────────────────────────────────────────────────────────────
+
 
 class SqlValidationService:
     """Service that parses and validates SQL against an approved schema catalog."""
@@ -317,20 +335,24 @@ class SqlValidationService:
         if dialect is None:
             return SqlValidationResult(
                 valid=False,
-                errors=(SqlValidationError(
-                    code="UNSUPPORTED_DIALECT",
-                    message=f"Unsupported catalog dialect: {catalog.dialect}",
-                ),),
+                errors=(
+                    SqlValidationError(
+                        code="UNSUPPORTED_DIALECT",
+                        message=f"Unsupported catalog dialect: {catalog.dialect}",
+                    ),
+                ),
             )
 
         # 1. Empty SQL check
         if not sql or not sql.strip():
             return SqlValidationResult(
                 valid=False,
-                errors=(SqlValidationError(
-                    code="EMPTY_SQL",
-                    message="SQL must not be empty",
-                ),),
+                errors=(
+                    SqlValidationError(
+                        code="EMPTY_SQL",
+                        message="SQL must not be empty",
+                    ),
+                ),
             )
 
         # 2. Parse SQL
@@ -340,28 +362,34 @@ class SqlValidationService:
             return SqlValidationResult(
                 valid=False,
                 normalized_sql=None,
-                errors=(SqlValidationError(
-                    code="PARSE_ERROR",
-                    message="SQL could not be parsed",
-                ),),
+                errors=(
+                    SqlValidationError(
+                        code="PARSE_ERROR",
+                        message="SQL could not be parsed",
+                    ),
+                ),
             )
 
         if len(ast) == 0:
             return SqlValidationResult(
                 valid=False,
-                errors=(SqlValidationError(
-                    code="EMPTY_STATEMENT",
-                    message="SQL contains no statements",
-                ),),
+                errors=(
+                    SqlValidationError(
+                        code="EMPTY_STATEMENT",
+                        message="SQL contains no statements",
+                    ),
+                ),
             )
 
         if len(ast) > 1:
             return SqlValidationResult(
                 valid=False,
-                errors=(SqlValidationError(
-                    code="MULTIPLE_STATEMENTS",
-                    message="Multiple SQL statements are not allowed",
-                ),),
+                errors=(
+                    SqlValidationError(
+                        code="MULTIPLE_STATEMENTS",
+                        message="Multiple SQL statements are not allowed",
+                    ),
+                ),
             )
 
         stmt = ast[0]
@@ -444,68 +472,89 @@ class SqlValidationService:
 
         # Check root type - return specific error codes for write/DDL/admin operations
         if isinstance(stmt, (exp.Insert, exp.Update, exp.Delete)):
-            return [SqlValidationError(
-                code="WRITE_OPERATION",
-                message=f"Write operation {type(stmt).__name__} is not allowed",
-            )]
+            return [
+                SqlValidationError(
+                    code="WRITE_OPERATION",
+                    message=f"Write operation {type(stmt).__name__} is not allowed",
+                )
+            ]
         elif isinstance(stmt, (exp.Create, exp.Drop)):
-            return [SqlValidationError(
-                code="DDL_OPERATION",
-                message=f"DDL operation {type(stmt).__name__} is not allowed",
-            )]
+            return [
+                SqlValidationError(
+                    code="DDL_OPERATION",
+                    message=f"DDL operation {type(stmt).__name__} is not allowed",
+                )
+            ]
         elif isinstance(stmt, exp.Command):
             # Check for admin commands parsed as Command
             cmd_text = stmt.sql().upper()
-            if any(cmd_text.startswith(op) for op in ("COPY", "VACUUM", "ANALYZE", "REINDEX", "CLUSTER")):
-                return [SqlValidationError(
-                    code="ADMIN_OPERATION",
-                    message=f"Administrative command {cmd_text.split()[0]} is not allowed",
-                )]
+            if any(
+                cmd_text.startswith(op)
+                for op in ("COPY", "VACUUM", "ANALYZE", "REINDEX", "CLUSTER")
+            ):
+                return [
+                    SqlValidationError(
+                        code="ADMIN_OPERATION",
+                        message=f"Administrative command {cmd_text.split()[0]} is not allowed",
+                    )
+                ]
             elif any(cmd_text.startswith(op) for op in ("ALTER", "TRUNCATE")):
-                return [SqlValidationError(
-                    code="DDL_OPERATION",
-                    message=f"DDL operation {cmd_text.split()[0]} is not allowed",
-                )]
+                return [
+                    SqlValidationError(
+                        code="DDL_OPERATION",
+                        message=f"DDL operation {cmd_text.split()[0]} is not allowed",
+                    )
+                ]
         elif isinstance(stmt, exp.Alias):
             # VACUUM, REINDEX, CLUSTER parsed as Alias
             if isinstance(stmt.this, exp.Column):
                 cmd_name = stmt.this.name.upper()
                 if cmd_name in ("VACUUM", "REINDEX", "CLUSTER"):
-                    return [SqlValidationError(
-                        code="ADMIN_OPERATION",
-                        message=f"Administrative command {cmd_name} is not allowed",
-                    )]
+                    return [
+                        SqlValidationError(
+                            code="ADMIN_OPERATION",
+                            message=f"Administrative command {cmd_name} is not allowed",
+                        )
+                    ]
 
         # Check allowed root types
         if not isinstance(stmt, (exp.Select, exp.With, exp.Union)):
-            return [SqlValidationError(
-                code="STATEMENT_NOT_ALLOWED",
-                message=f"Statement type {type(stmt).__name__} is not allowed. Only SELECT, WITH, and UNION are allowed.",
-            )]
+            return [
+                SqlValidationError(
+                    code="STATEMENT_NOT_ALLOWED",
+                    message=f"Statement type {type(stmt).__name__} is not allowed. Only SELECT, WITH, and UNION are allowed.",
+                )
+            ]
 
         # For WITH, check the body
         if isinstance(stmt, exp.With):
             body = stmt.this
             if not isinstance(body, (exp.Select, exp.Union)):
-                errors.append(SqlValidationError(
-                    code="STATEMENT_NOT_ALLOWED",
-                    message=f"WITH statement body type {type(body).__name__} is not allowed. Only SELECT and UNION are allowed.",
-                ))
+                errors.append(
+                    SqlValidationError(
+                        code="STATEMENT_NOT_ALLOWED",
+                        message=f"WITH statement body type {type(body).__name__} is not allowed. Only SELECT and UNION are allowed.",
+                    )
+                )
 
         # For UNION, check both sides
         if isinstance(stmt, exp.Union):
             left = stmt.left
             right = stmt.right
             if not isinstance(left, (exp.Select, exp.Union, exp.With)):
-                errors.append(SqlValidationError(
-                    code="STATEMENT_NOT_ALLOWED",
-                    message=f"UNION left branch type {type(left).__name__} is not allowed.",
-                ))
+                errors.append(
+                    SqlValidationError(
+                        code="STATEMENT_NOT_ALLOWED",
+                        message=f"UNION left branch type {type(left).__name__} is not allowed.",
+                    )
+                )
             if not isinstance(right, (exp.Select, exp.Union, exp.With)):
-                errors.append(SqlValidationError(
-                    code="STATEMENT_NOT_ALLOWED",
-                    message=f"UNION right branch type {type(right).__name__} is not allowed.",
-                ))
+                errors.append(
+                    SqlValidationError(
+                        code="STATEMENT_NOT_ALLOWED",
+                        message=f"UNION right branch type {type(right).__name__} is not allowed.",
+                    )
+                )
 
         return errors
 
@@ -514,52 +563,74 @@ class SqlValidationService:
         errors = []
 
         # Check for write operations
-        for node in stmt.find_all(exp.Insert):
-            errors.append(SqlValidationError(
-                code="WRITE_OPERATION",
-                message="Write operation INSERT is not allowed",
-            ))
-        for node in stmt.find_all(exp.Update):
-            errors.append(SqlValidationError(
-                code="WRITE_OPERATION",
-                message="Write operation UPDATE is not allowed",
-            ))
-        for node in stmt.find_all(exp.Delete):
-            errors.append(SqlValidationError(
-                code="WRITE_OPERATION",
-                message="Write operation DELETE is not allowed",
-            ))
+        for _node in stmt.find_all(exp.Insert):
+            errors.append(
+                SqlValidationError(
+                    code="WRITE_OPERATION",
+                    message="Write operation INSERT is not allowed",
+                )
+            )
+        for _node in stmt.find_all(exp.Update):
+            errors.append(
+                SqlValidationError(
+                    code="WRITE_OPERATION",
+                    message="Write operation UPDATE is not allowed",
+                )
+            )
+        for _node in stmt.find_all(exp.Delete):
+            errors.append(
+                SqlValidationError(
+                    code="WRITE_OPERATION",
+                    message="Write operation DELETE is not allowed",
+                )
+            )
 
         # Check for DDL operations
-        for node in stmt.find_all(exp.Create):
-            errors.append(SqlValidationError(
-                code="DDL_OPERATION",
-                message="DDL operation CREATE is not allowed",
-            ))
-        for node in stmt.find_all(exp.Drop):
-            errors.append(SqlValidationError(
-                code="DDL_OPERATION",
-                message="DDL operation DROP is not allowed",
-            ))
+        for _node in stmt.find_all(exp.Create):
+            errors.append(
+                SqlValidationError(
+                    code="DDL_OPERATION",
+                    message="DDL operation CREATE is not allowed",
+                )
+            )
+        for _node in stmt.find_all(exp.Drop):
+            errors.append(
+                SqlValidationError(
+                    code="DDL_OPERATION",
+                    message="DDL operation DROP is not allowed",
+                )
+            )
 
         # Check for Command nodes (ALTER, TRUNCATE, COPY, etc.)
         for node in stmt.find_all(exp.Command):
             cmd_text = node.sql().upper()
-            if any(op in cmd_text for op in ["ALTER", "TRUNCATE", "COPY", "VACUUM", "ANALYZE", "REINDEX", "CLUSTER"]):
-                errors.append(SqlValidationError(
-                    code="ADMIN_OPERATION" if any(cmd_text.startswith(op) for op in ("COPY", "VACUUM", "ANALYZE", "REINDEX", "CLUSTER")) else "DDL_OPERATION",
-                    message=f"Administrative command {cmd_text.split()[0]} is not allowed",
-                ))
+            if any(
+                op in cmd_text
+                for op in ["ALTER", "TRUNCATE", "COPY", "VACUUM", "ANALYZE", "REINDEX", "CLUSTER"]
+            ):
+                errors.append(
+                    SqlValidationError(
+                        code="ADMIN_OPERATION"
+                        if any(
+                            cmd_text.startswith(op)
+                            for op in ("COPY", "VACUUM", "ANALYZE", "REINDEX", "CLUSTER")
+                        )
+                        else "DDL_OPERATION",
+                        message=f"Administrative command {cmd_text.split()[0]} is not allowed",
+                    )
+                )
 
         # Check for Alias nodes that represent admin commands (VACUUM, REINDEX, CLUSTER)
         for node in stmt.find_all(exp.Alias):
             if isinstance(node.this, exp.Column):
                 cmd_name = node.this.name.upper()
                 if cmd_name in ("VACUUM", "REINDEX", "CLUSTER"):
-                    errors.append(SqlValidationError(
-                        code="ADMIN_OPERATION",
-                        message=f"Administrative command {cmd_name} is not allowed",
-                    ))
+                    errors.append(
+                        SqlValidationError(
+                            code="ADMIN_OPERATION",
+                            message=f"Administrative command {cmd_name} is not allowed",
+                        )
+                    )
 
         return errors
 
@@ -570,19 +641,23 @@ class SqlValidationService:
         for table in stmt.find_all(exp.Table):
             schema = _get_schema_name(table)
             if _is_system_schema(schema):
-                errors.append(SqlValidationError(
-                    code="SYSTEM_SCHEMA_ACCESS",
-                    message=f"Access to system schema '{schema}' is not allowed",
-                    context=table.name,
-                ))
+                errors.append(
+                    SqlValidationError(
+                        code="SYSTEM_SCHEMA_ACCESS",
+                        message=f"Access to system schema '{schema}' is not allowed",
+                        context=table.name,
+                    )
+                )
 
             # Check if table name itself is a system schema
             if _normalize_identifier(table.name) in _SYSTEM_SCHEMAS:
-                errors.append(SqlValidationError(
-                    code="SYSTEM_SCHEMA_ACCESS",
-                    message=f"Access to system table '{table.name}' is not allowed",
-                    context=table.name,
-                ))
+                errors.append(
+                    SqlValidationError(
+                        code="SYSTEM_SCHEMA_ACCESS",
+                        message=f"Access to system table '{table.name}' is not allowed",
+                        context=table.name,
+                    )
+                )
 
         return errors
 
@@ -592,19 +667,23 @@ class SqlValidationService:
 
         for func in stmt.find_all(exp.Func):
             if _is_prohibited_function(func.name):
-                errors.append(SqlValidationError(
-                    code="DANGEROUS_FUNCTION",
-                    message=f"Call to prohibited function '{func.name}' is not allowed",
-                    context=func.name,
-                ))
+                errors.append(
+                    SqlValidationError(
+                        code="DANGEROUS_FUNCTION",
+                        message=f"Call to prohibited function '{func.name}' is not allowed",
+                        context=func.name,
+                    )
+                )
 
         for func in stmt.find_all(exp.Anonymous):
             if _is_prohibited_function(func.this):
-                errors.append(SqlValidationError(
-                    code="DANGEROUS_FUNCTION",
-                    message=f"Call to prohibited function '{func.this}' is not allowed",
-                    context=func.this,
-                ))
+                errors.append(
+                    SqlValidationError(
+                        code="DANGEROUS_FUNCTION",
+                        message=f"Call to prohibited function '{func.this}' is not allowed",
+                        context=func.this,
+                    )
+                )
 
         return errors
 
@@ -618,10 +697,12 @@ class SqlValidationService:
             if isinstance(parent, exp.Count) and isinstance(parent.this, exp.Star):
                 continue
 
-            errors.append(SqlValidationError(
-                code="WILDCARD_NOT_ALLOWED",
-                message="Wildcard selection (*) is not allowed. Use explicit column names. COUNT(*) is permitted.",
-            ))
+            errors.append(
+                SqlValidationError(
+                    code="WILDCARD_NOT_ALLOWED",
+                    message="Wildcard selection (*) is not allowed. Use explicit column names. COUNT(*) is permitted.",
+                )
+            )
 
         return errors
 
@@ -631,36 +712,42 @@ class SqlValidationService:
         catalog: SqlSchemaCatalog,
     ) -> tuple[list[SqlValidationError], set[str], set[str]]:
         """Analyze all query scopes for table and column validation."""
-        errors = []
-        parsed_tables = set()
-        parsed_columns = set()
+        errors: list[SqlValidationError] = []
+        parsed_tables: set[str] = set()
+        parsed_columns: set[str] = set()
 
         try:
             scopes = list(traverse_scope(stmt))
         except Exception as e:
-            errors.append(SqlValidationError(
-                code="UNSUPPORTED_SQL_FEATURE",
-                message=f"Scope analysis failed: {type(e).__name__}",
-            ))
+            errors.append(
+                SqlValidationError(
+                    code="UNSUPPORTED_SQL_FEATURE",
+                    message=f"Scope analysis failed: {type(e).__name__}",
+                )
+            )
             return errors, parsed_tables, parsed_columns
 
         # First pass: collect all physical tables from scope-aware selected sources
         physical_tables = _collect_physical_tables(scopes)
         for table_name in physical_tables:
             if table_name not in catalog.allowed_table_names():
-                errors.append(SqlValidationError(
-                    code="TABLE_NOT_ALLOWED",
-                    message=f"Table '{table_name}' is not in the approved catalog",
-                    context=table_name,
-                ))
+                errors.append(
+                    SqlValidationError(
+                        code="TABLE_NOT_ALLOWED",
+                        message=f"Table '{table_name}' is not in the approved catalog",
+                        context=table_name,
+                    )
+                )
             else:
                 table_def = catalog.get_table(table_name)
                 if not table_def.allowed_for_select:
-                    errors.append(SqlValidationError(
-                        code="TABLE_NOT_ALLOWED",
-                        message=f"Table '{table_name}' is not selectable",
-                        context=table_name,
-                    ))
+                    errors.append(
+                        SqlValidationError(
+                            code="TABLE_NOT_ALLOWED",
+                            message=f"Table '{table_name}' is not selectable",
+                            context=table_name,
+                        )
+                    )
                 else:
                     parsed_tables.add(table_name)
 
@@ -668,11 +755,11 @@ class SqlValidationService:
         scope_outputs: dict[int, dict[str, frozenset[str]]] = {}
         for scope_idx, scope in enumerate(scopes):
             visible_sources = _get_visible_sources_in_scope(scope)
-            outer_scopes = scopes[scope_idx + 1:]
+            outer_scopes = scopes[scope_idx + 1 :]
 
             # Get external columns for this scope (correlated references)
             external_col_names = set()
-            for ext_col in getattr(scope, 'external_columns', []):
+            for ext_col in getattr(scope, "external_columns", []):
                 external_col_names.add(_normalize_identifier(ext_col.name))
 
             for col in scope.columns:
@@ -694,23 +781,29 @@ class SqlValidationService:
                         source_entry = visible_sources.get(table_qualifier)
                         if source_entry is None:
                             for outer_scope in outer_scopes:
-                                source_entry = _get_visible_sources_in_scope(outer_scope).get(table_qualifier)
+                                source_entry = _get_visible_sources_in_scope(outer_scope).get(
+                                    table_qualifier
+                                )
                                 if source_entry is not None:
                                     break
                         source_node = source_entry[0] if source_entry is not None else None
                         source_obj = source_entry[1] if source_entry is not None else None
                         label = _source_label(source_node, source_obj)
-                        errors.append(SqlValidationError(
-                            code="COLUMN_NOT_ALLOWED",
-                            message=f"Column '{col.name}' not found in {label} '{table_qualifier}'",
-                            context=f"{table_qualifier}.{col.name}",
-                        ))
+                        errors.append(
+                            SqlValidationError(
+                                code="COLUMN_NOT_ALLOWED",
+                                message=f"Column '{col.name}' not found in {label} '{table_qualifier}'",
+                                context=f"{table_qualifier}.{col.name}",
+                            )
+                        )
                     elif resolution is None:
-                        errors.append(SqlValidationError(
-                            code="COLUMN_NOT_ALLOWED",
-                            message=f"Unknown table reference '{table_qualifier}'",
-                            context=f"{table_qualifier}.{col.name}",
-                        ))
+                        errors.append(
+                            SqlValidationError(
+                                code="COLUMN_NOT_ALLOWED",
+                                message=f"Unknown table reference '{table_qualifier}'",
+                                context=f"{table_qualifier}.{col.name}",
+                            )
+                        )
                     else:
                         parsed_columns.update(resolution)
                 else:
@@ -726,17 +819,21 @@ class SqlValidationService:
                         scope_outputs=scope_outputs,
                     )
                     if result == _COLUMN_AMBIGUOUS:
-                        errors.append(SqlValidationError(
-                            code="UNQUALIFIED_COLUMN_AMBIGUOUS",
-                            message=f"Column '{col.name}' is ambiguous across multiple tables",
-                            context=col.name,
-                        ))
+                        errors.append(
+                            SqlValidationError(
+                                code="UNQUALIFIED_COLUMN_AMBIGUOUS",
+                                message=f"Column '{col.name}' is ambiguous across multiple tables",
+                                context=col.name,
+                            )
+                        )
                     elif result is None:
-                        errors.append(SqlValidationError(
-                            code="COLUMN_NOT_ALLOWED",
-                            message=f"Column '{col.name}' not found in any visible table",
-                            context=col.name,
-                        ))
+                        errors.append(
+                            SqlValidationError(
+                                code="COLUMN_NOT_ALLOWED",
+                                message=f"Column '{col.name}' not found in any visible table",
+                                context=col.name,
+                            )
+                        )
                     else:
                         parsed_columns.update(result)
 
@@ -764,17 +861,13 @@ class SqlValidationService:
             model_norm = {_normalize_identifier(t) for t in model_tables}
             parsed_norm = {_normalize_identifier(t) for t in parsed_tables}
             if model_norm != parsed_norm:
-                warnings.append(
-                    "Model-reported tables differ from parsed SQL references."
-                )
+                warnings.append("Model-reported tables differ from parsed SQL references.")
 
         if model_columns:
             model_norm = {_normalize_identifier(c) for c in model_columns}
             parsed_norm = {_normalize_identifier(c) for c in parsed_columns}
             if model_norm != parsed_norm:
-                warnings.append(
-                    "Model-reported columns differ from parsed SQL references."
-                )
+                warnings.append("Model-reported columns differ from parsed SQL references.")
 
         return warnings
 

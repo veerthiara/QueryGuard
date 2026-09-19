@@ -83,7 +83,9 @@ def _service(provider: object) -> SqlGenerationService:
     )
 
 
-def _generate(service: SqlGenerationService, question: str = "List my orders", **kwargs: object) -> GeneratedSql:
+def _generate(
+    service: SqlGenerationService, question: str = "List my orders", **kwargs: object
+) -> GeneratedSql:
     return asyncio.run(service.generate(question, **kwargs))  # type: ignore[arg-type]
 
 

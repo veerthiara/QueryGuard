@@ -65,7 +65,9 @@ class SqlTableDefinition(BaseModel):
         return next((column for column in self.columns if column.name == name), None)
 
     def selectable_columns(self) -> tuple[SqlColumnDefinition, ...]:
-        return tuple(column for column in self.columns if column.allowed_for_select and not column.sensitive)
+        return tuple(
+            column for column in self.columns if column.allowed_for_select and not column.sensitive
+        )
 
     def user_scope_columns(self) -> tuple[SqlColumnDefinition, ...]:
         return tuple(column for column in self.columns if column.is_user_scope)
@@ -112,9 +114,13 @@ class SqlSchemaCatalog(BaseModel):
         seen_relationships = set()
         for relationship in self.relationships:
             if relationship.left_table not in table_map:
-                raise ValueError(f"relationship references unknown left_table: {relationship.left_table}")
+                raise ValueError(
+                    f"relationship references unknown left_table: {relationship.left_table}"
+                )
             if relationship.right_table not in table_map:
-                raise ValueError(f"relationship references unknown right_table: {relationship.right_table}")
+                raise ValueError(
+                    f"relationship references unknown right_table: {relationship.right_table}"
+                )
             left_table = table_map[relationship.left_table]
             right_table = table_map[relationship.right_table]
             if not left_table.get_column(relationship.left_column):
@@ -212,6 +218,7 @@ class SqlValidationResult(BaseModel):
             raise ValueError("valid=False requires at least one error")
         return self
 
+
 class SqlPolicyError(BaseModel):
     """One user-scope or result-bound policy error."""
 
@@ -254,7 +261,9 @@ class QueryPreparationResult(BaseModel):
     def _validate_state(self) -> "QueryPreparationResult":
         if self.approved:
             if self.stage != "approved" or self.structural is None or not self.structural.valid:
-                raise ValueError("approved results require an approved stage and valid structural result")
+                raise ValueError(
+                    "approved results require an approved stage and valid structural result"
+                )
             if self.policy is None or not self.policy.valid:
                 raise ValueError("approved results require a valid policy result")
             if self.errors:
@@ -268,7 +277,9 @@ class QueryPreparationResult(BaseModel):
                 raise ValueError("generation failures must not contain downstream results")
         elif self.stage == "structural_validation":
             if self.structural is None or self.structural.valid or self.policy is not None:
-                raise ValueError("structural failures require an invalid structural result and no policy result")
+                raise ValueError(
+                    "structural failures require an invalid structural result and no policy result"
+                )
         elif self.stage == "policy_validation":
             if self.structural is None or not self.structural.valid:
                 raise ValueError("policy failures require a valid structural result")

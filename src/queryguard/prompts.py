@@ -1,6 +1,5 @@
 """Deterministic prompt construction for provider-neutral SQL generation."""
 
-
 _ALLOWED_HISTORY_ROLES = frozenset({"user", "assistant", "system"})
 
 
@@ -38,7 +37,9 @@ def build_sql_generation_messages(
         )
     )
 
-    copied_history = tuple(_copy_history_message(message, index) for index, message in enumerate(conversation_history))
+    copied_history = tuple(
+        _copy_history_message(message, index) for index, message in enumerate(conversation_history)
+    )
     return (
         {"role": "system", "content": system_content},
         *copied_history,

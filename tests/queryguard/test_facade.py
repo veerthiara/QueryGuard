@@ -15,7 +15,6 @@ from queryguard import (
     SqlValidationService,
 )
 
-
 EXAMPLE_PATH = Path(__file__).parents[2] / "examples" / "commerce_catalog.yaml"
 VALID_SQL = "SELECT id FROM orders WHERE account_id = @user_id LIMIT 100"
 POLICY_INVALID_SQL = "SELECT id FROM orders WHERE account_id = @user_id"
