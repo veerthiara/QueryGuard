@@ -55,6 +55,10 @@ tables:
         description: Order total in cents
         type: integer
         nullable: false
+      - name: status
+        description: Order lifecycle status
+        type: varchar(50)
+        nullable: false
   - name: order_items
     description: Order line items
     user_scoped: true

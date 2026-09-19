@@ -2,9 +2,9 @@
 
 QueryGuard is a reusable Python package for safe LLM-assisted SQL analytics. It uses approved schema catalogs, SQLGlot AST parsing, structural validation, and a deliberately layered design that can later add policy validation and safe execution adapters.
 
-## Rev 07 scope
+## Rev 08 scope
 
-Version 0.7.0 includes:
+Version 0.8.0 includes:
 
 - schema contracts
 - catalog providers
@@ -51,7 +51,13 @@ For SQL supplied by another agent or tool, use `guard.validate_sql(sql)` to run 
 ```bash
 python -m pip install -e '.[dev]'
 python -m pytest
+python -m pytest tests/e2e -q
 ```
+
+The deterministic E2E acceptance suite uses a test-only provider and the
+real commerce YAML catalog. It requires no API keys, live provider, or
+database. See [the testing guide](docs/testing.md) for the distinction
+between correctness and safety tests and future live-provider evaluations.
 
 ## Programmatic catalog and validation
 
