@@ -8,12 +8,15 @@ from queryguard.catalog import (
 from queryguard.contracts import (
     GeneratedSql,
     SqlColumnDefinition,
+    SqlPolicyError,
+    SqlPolicyValidationResult,
     SqlRelationshipDefinition,
     SqlSchemaCatalog,
     SqlTableDefinition,
     SqlValidationError,
     SqlValidationResult,
 )
+from queryguard.policy import SqlPolicyValidationService
 from queryguard.generation import (
     SqlGenerationError,
     SqlGenerationProvider,
@@ -26,7 +29,7 @@ from queryguard.settings import SqlAnalyticsSettings
 from queryguard.validation import SqlValidationService
 from queryguard.yaml_loader import CatalogYamlError, load_catalog_from_yaml, parse_catalog_yaml
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 __all__ = [
     "GeneratedSql",
@@ -39,6 +42,9 @@ __all__ = [
     "SqlGenerationProvider",
     "SqlGenerationResponseError",
     "SqlGenerationService",
+    "SqlPolicyError",
+    "SqlPolicyValidationResult",
+    "SqlPolicyValidationService",
     "SqlRelationshipDefinition",
     "SqlSchemaCatalog",
     "SqlSchemaContextRenderer",

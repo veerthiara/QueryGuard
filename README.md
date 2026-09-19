@@ -2,9 +2,9 @@
 
 QueryGuard is a reusable Python package for safe LLM-assisted SQL analytics. It uses approved schema catalogs, SQLGlot AST parsing, structural validation, and a deliberately layered design that can later add policy validation and safe execution adapters.
 
-## Rev 03 scope
+## Rev 04 scope
 
-Version 0.3.0 includes:
+Version 0.4.0 includes:
 
 - schema contracts
 - catalog providers
@@ -13,12 +13,13 @@ Version 0.3.0 includes:
 - SQLGlot-based structural validation
 - a safe, strict YAML catalog loader
 - provider-neutral, single-pass SQL generation
+- policy validation for user scope and result bounds
 
 Structural validation permits approved read-only query shapes and checks catalog tables, columns, system schemas, prohibited functions, wildcards, CTEs, derived tables, nested scopes, UNION, and parser-derived physical lineage.
 
-Generation uses an application-supplied provider interface and returns the existing `GeneratedSql` contract. It does not validate or execute generated SQL.
+Generation uses an application-supplied provider interface and returns the existing `GeneratedSql` contract. Policy validation enforces direct user scope and result bounds without executing SQL.
 
-Future revisions will add scope/result policy validation and execution adapters. Those components are not included yet.
+Future revisions will add execution adapters. Those components are not included yet.
 
 ## Install and test
 
@@ -115,3 +116,29 @@ print(generated.sql)
 ```
 
 Providers return exactly one JSON object matching `GeneratedSql`; Markdown and surrounding prose are rejected. See [the SQL generation guide](docs/sql-generation.md) for the provider protocol and stage boundaries.
+
+## Policy validation
+
+Policy validation is a separate stage after structural validation. It requires direct user-scope predicates for configured user-scoped tables and bounds row-returning results.
+
+```python
+from queryguard import (
+    SqlPolicyValidationService,
+    StaticSqlCatalogProvider,
+    load_catalog_from_yaml,
+)
+
+catalog = load_catalog_from_yaml("catalog.yaml")
+provider = StaticSqlCatalogProvider(catalog)
+policy = SqlPolicyValidationService(provider)
+
+result = policy.validate(
+    "SELECT id FROM orders "
+    "WHERE account_id = @user_id "
+    "LIMIT 100"
+)
+
+assert result.valid
+```
+
+See [the policy validation guide](docs/policy-validation.md) for the supported parameter forms, scope semantics, and LIMIT rules.
