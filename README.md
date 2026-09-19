@@ -2,9 +2,9 @@
 
 QueryGuard is a reusable Python package for safe LLM-assisted SQL analytics. It uses approved schema catalogs, SQLGlot AST parsing, structural validation, and a deliberately layered design that can later add policy validation and safe execution adapters.
 
-## Rev 04 scope
+## Rev 05 scope
 
-Version 0.4.0 includes:
+Version 0.5.0 includes:
 
 - schema contracts
 - catalog providers
@@ -14,12 +14,13 @@ Version 0.4.0 includes:
 - a safe, strict YAML catalog loader
 - provider-neutral, single-pass SQL generation
 - policy validation for user scope and result bounds
+- optional read-only SQLAlchemy execution adapter
 
 Structural validation permits approved read-only query shapes and checks catalog tables, columns, system schemas, prohibited functions, wildcards, CTEs, derived tables, nested scopes, UNION, and parser-derived physical lineage.
 
 Generation uses an application-supplied provider interface and returns the existing `GeneratedSql` contract. Policy validation enforces direct user scope and result bounds without executing SQL.
 
-Future revisions will add execution adapters. Those components are not included yet.
+The optional execution adapter runs SQL that has already passed structural and policy validation. It does not validate SQL automatically.
 
 ## Install and test
 
@@ -142,3 +143,28 @@ assert result.valid
 ```
 
 See [the policy validation guide](docs/policy-validation.md) for the supported parameter forms, scope semantics, and LIMIT rules.
+
+## Optional read-only execution
+
+Install the optional SQLAlchemy adapter only when execution is needed:
+
+```bash
+python -m pip install "queryguard[sqlalchemy]"
+```
+
+Inject an application-owned synchronous SQLAlchemy Session. The SQL must already have passed structural and policy validation.
+
+```python
+from queryguard import SqlExecutionService
+from queryguard.adapters.sqlalchemy import SqlAlchemyExecutor
+
+executor = SqlAlchemyExecutor(session)
+service = SqlExecutionService(executor)
+
+result = await service.execute(
+    validated_sql,
+    {"user_id": runtime_user_id},
+)
+```
+
+QueryGuard binds parameters separately, converts executable `@name` placeholders to SQLAlchemy `:name` binds, fetches a bounded result, and does not retry user queries. See [the execution guide](docs/execution.md) for the security boundary and adapter details.

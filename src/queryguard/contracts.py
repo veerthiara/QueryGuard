@@ -239,3 +239,15 @@ class SqlPolicyValidationResult(BaseModel):
         if not self.valid and not self.errors:
             raise ValueError("valid=False requires at least one error")
         return self
+
+
+class SqlExecutionResult(BaseModel):
+    """Safe, normalized outcome of executing already-validated SQL."""
+
+    success: bool
+    columns: tuple[str, ...] = ()
+    rows: tuple[dict[str, object], ...] = ()
+    row_count: int = 0
+    truncated: bool = False
+    execution_ms: float = 0.0
+    error_code: str | None = None
