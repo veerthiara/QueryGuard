@@ -84,6 +84,24 @@ tests. When changing user scope or result bounds, add focused policy tests.
 When changing generation-to-approval flow, add facade tests and an E2E scenario
 when the behavior crosses stage boundaries.
 
+### If modifying structural validation
+
+Structural validation lives in `src/queryguard/validation/` as an internal package:
+
+- **parsing behavior** → `validation/parsing.py`
+- **statement form rules** → `validation/statements.py`
+- **physical tables** → `validation/tables.py`
+- **columns** → `validation/columns.py`
+- **scope/alias resolution** → `validation/scopes.py`
+- **derived/CTE lineage** → `validation/lineage.py`
+- **generated-vs-derived metadata** → `validation/metadata.py`
+- **orchestration** → `validation/service.py`
+
+Every structural validation bug fix must include:
+- positive test if relevant
+- negative regression test
+- E2E verification where relevant
+
 Safety-sensitive changes need negative tests as well as happy-path tests. Cover
 cases such as forbidden tables or columns, missing user scope, literal user
 scope, unsafe `OR`, unbounded results, and UNION edge cases. A SQLGlot-related
